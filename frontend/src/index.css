@@ -145,3 +145,110 @@ input:focus, select:focus {
   margin-bottom: 15px;
   color: #555;
 }
+
+/* --- ESTILOS DA LANDING PAGE --- */
+
+.hero-section {
+  text-align: center;
+  padding: 50px 20px 30px;
+  background: linear-gradient(to bottom, #fdeaf2, var(--bg-color));
+  margin-bottom: 30px;
+}
+
+.hero-title {
+  color: var(--primary-color);
+  font-size: 2.2rem;
+  margin-bottom: 10px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.hero-subtitle {
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  margin-bottom: 20px;
+}
+
+.contact-badges {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.95rem;
+  color: var(--text-main);
+  background: white;
+  padding: 15px 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.info-box {
+  background: #fff;
+  border-left: 5px solid var(--primary-color);
+  padding: 25px;
+  max-width: 700px;
+  margin: 0 auto 40px auto;
+  border-radius: 0 12px 12px 0;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.info-box h3 {
+  color: var(--primary-color);
+  margin-bottom: 15px;
+}
+
+.info-box ul {
+  padding-left: 20px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.info-box li {
+  margin-bottom: 8px;
+}
+
+.catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 25px;
+  max-width: 900px;
+  margin: 0 auto 50px auto;
+  padding: 0 20px;
+}
+
+.catalog-card {
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.06);
+  transition: transform 0.3s ease;
+}
+
+.catalog-card:hover {
+  transform: translateY(-5px);
+}
+
+.catalog-card img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+}
+
+.catalog-card-body {
+  padding: 20px;
+  text-align: center;
+}
+
+.catalog-card-body h4 {
+  color: var(--text-main);
+  font-size: 1.2rem;
+  margin-bottom: 8px;
+}
+
+.catalog-card-body p {
+  color: var(--primary-color);
+  font-weight: bold;
+  font-size: 1.1rem;
+}
