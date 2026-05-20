@@ -149,3 +149,8 @@ def create_booking(booking: BookingRequest, db: Session = Depends(get_db)):
         "deposit_amount": service.deposit_amount,
         "balance_due": balance_due
     }
+
+@app.get("/appointments/", response_model=list[schemas.AppointmentResponse])
+def get_appointments(db: Session = Depends(get_db)):
+    # Puxa todos os agendamentos e ordena pela data (os mais próximos primeiro)
+    return db.query(models.Appointment).order_by(models.Appointment.scheduled_at.asc()).all()

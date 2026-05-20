@@ -64,7 +64,7 @@ class AppointmentCreate(AppointmentBase):
 class AppointmentResponse(AppointmentBase):
     id: int
     status: str
-    # Incluímos os detalhes do serviço e financeiro na resposta do agendamento
+    client: Optional[ClientResponse] = None  # <-- ADICIONE ESTA LINHA
     service: Optional[ServiceResponse] = None
     financial: Optional[FinancialResponse] = None
 

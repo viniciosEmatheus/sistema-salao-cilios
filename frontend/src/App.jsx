@@ -1,17 +1,17 @@
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import ClientBooking from './pages/ClientBooking';
 import AdminDashboard from './pages/AdminDashboard';
 
 function App() {
   return (
     <BrowserRouter>
-      <nav className="navbar">
-        <Link to="/">Agendar</Link>
-        <Link to="/admin">Área da Dona</Link>
-      </nav>
+      {/* Removemos a tag <nav> daqui. Não há mais botões unindo as telas. */}
       <Routes>
+        {/* Rota da Cliente: Acessa a raiz do site e vê APENAS o agendamento */}
         <Route path="/" element={<ClientBooking />} />
-        <Route path="/admin" element={<AdminDashboard />} />
+        
+        {/* Rota da Giovanna: Link separado e invisível para o público */}
+        <Route path="/gerencia" element={<AdminDashboard />} />
       </Routes>
     </BrowserRouter>
   );
