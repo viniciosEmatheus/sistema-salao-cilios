@@ -24,7 +24,7 @@ export default function ClientBooking() {
       const response = await api.post('/appointments/', payload);
       setPixData(response.data);
     } catch (error) {
-      alert("Erro ao criar agendamento: " + (error.response?.data?.detail || error.message));
+      alert("Erro ao criar agendamento. Verifique os dados.");
     } finally {
       setLoading(false);
     }
@@ -36,40 +36,51 @@ export default function ClientBooking() {
 
   if (pixData) {
     return (
-      <div style={{ textAlign: 'center', marginTop: '50px' }}>
-        <h2>Horário Reservado!</h2>
-        <p>Escaneie o QR Code abaixo para pagar o sinal e confirmar seu agendamento.</p>
-        <img src={`data:image/jpeg;base64,${pixData.pix_qr_code_base64}`} alt="QR Code Pix" style={{ width: '250px', margin: '20px auto' }} />
+      <div className="container pix-container">
+        <h2 className="title">Horário Reservado!</h2>
+        <p style={{ color: 'var(--text-muted)' }}>Escaneie o QR Code abaixo para pagar o sinal e confirmar seu agendamento.</p>
+        
+        <img src={`data:image/jpeg;base64,${pixData.pix_qr_code_base64}`} alt="QR Code Pix" className="pix-qrcode" />
+        
         <div>
-          <p><strong>Ou use o Pix Copia e Cola:</strong></p>
-          <textarea readOnly value={pixData.pix_copia_cola} style={{ width: '80%', height: '80px', marginBottom: '10px' }} />
-          <br/>
-          <button onClick={() => navigator.clipboard.writeText(pixData.pix_copia_cola)}>Copiar Código</button>
+          <p style={{ marginBottom: '8px', fontWeight: 'bold' }}>Ou use o Pix Copia e Cola:</p>
+          <textarea readOnly value={pixData.pix_copia_cola} className="pix-textarea" />
+          <button className="btn-primary" onClick={() => navigator.clipboard.writeText(pixData.pix_copia_cola)}>
+            Copiar Código Pix
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={{ maxWidth: '400px', margin: '0 auto', padding: '20px', fontFamily: 'sans-serif' }}>
-      <h2>Agendar Cílios</h2>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-        <label>Nome Completo:
-          <input type="text" name="client_name" required onChange={handleChange} style={{ width: '100%', padding: '8px' }}/>
-        </label>
-        <label>WhatsApp:
-          <input type="tel" name="client_phone" required onChange={handleChange} placeholder="(11) 99999-9999" style={{ width: '100%', padding: '8px' }}/>
-        </label>
-        <label>Serviço:
-          <select name="service_id" onChange={handleChange} style={{ width: '100%', padding: '8px' }}>
+    <div className="container">
+      <h2 className="title">Agendar Cílios</h2>
+      <form onSubmit={handleSubmit}>
+        <div className="form-group">
+          <label>Nome Completo</label>
+          <input type="text" name="client_name" required onChange={handleChange} placeholder="Digite seu nome" />
+        </div>
+        
+        <div className="form-group">
+          <label>WhatsApp</label>
+          <input type="tel" name="client_phone" required onChange={handleChange} placeholder="(11) 99999-9999" />
+        </div>
+        
+        <div className="form-group">
+          <label>Serviço Desejado</label>
+          <select name="service_id" onChange={handleChange}>
             <option value="1">Volume Russo - Sinal R$ 50,00</option>
             <option value="2">Manutenção - Sinal R$ 30,00</option>
           </select>
-        </label>
-        <label>Data e Hora:
-          <input type="datetime-local" name="scheduled_at" required onChange={handleChange} style={{ width: '100%', padding: '8px' }}/>
-        </label>
-        <button type="submit" disabled={loading} style={{ padding: '12px', backgroundColor: '#d63384', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
+        </div>
+        
+        <div className="form-group">
+          <label>Data e Hora</label>
+          <input type="datetime-local" name="scheduled_at" required onChange={handleChange} />
+        </div>
+        
+        <button type="submit" className="btn-primary" disabled={loading}>
           {loading ? 'Gerando Pix...' : 'Confirmar Horário'}
         </button>
       </form>
