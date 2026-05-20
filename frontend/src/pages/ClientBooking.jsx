@@ -1,19 +1,33 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import api from '../api/client';
 
 export default function ClientBooking() {
+  const [services, setServices] = useState([]);
   const [formData, setFormData] = useState({
     client_name: '',
     client_phone: '',
-    service_id: '1',
+    service_id: '',
     scheduled_at: ''
   });
   
   const [pixData, setPixData] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // Assim que a tela carrega, o React bate no FastAPI para buscar o catálogo
+  useEffect(() => {
+    api.get('/services/')
+      .then(response => {
+        setServices(response.data);
+      })
+      .catch(error => console.error("Erro ao buscar catálogo:", error));
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.service_id) {
+      alert("Por favor, selecione um serviço.");
+      return;
+    }
     setLoading(true);
     try {
       const payload = {
@@ -24,7 +38,7 @@ export default function ClientBooking() {
       const response = await api.post('/appointments/', payload);
       setPixData(response.data);
     } catch (error) {
-      alert("Erro ao criar agendamento. Verifique os dados.");
+      alert("Erro ao criar agendamento: " + (error.response?.data?.detail || error.message));
     } finally {
       setLoading(false);
     }
@@ -69,9 +83,13 @@ export default function ClientBooking() {
         
         <div className="form-group">
           <label>Serviço Desejado</label>
-          <select name="service_id" onChange={handleChange}>
-            <option value="1">Volume Russo - Sinal R$ 50,00</option>
-            <option value="2">Manutenção - Sinal R$ 30,00</option>
+          <select name="service_id" required onChange={handleChange} value={formData.service_id}>
+            <option value="" disabled>Selecione um serviço...</option>
+            {services.map(srv => (
+              <option key={srv.id} value={srv.id}>
+                {srv.name} - Sinal R$ {srv.deposit_amount.toFixed(2)}
+              </option>
+            ))}
           </select>
         </div>
         
@@ -81,7 +99,7 @@ export default function ClientBooking() {
         </div>
         
         <button type="submit" className="btn-primary" disabled={loading}>
-          {loading ? 'Gerando Pix...' : 'Confirmar Horário'}
+          {loading ? 'Processando...' : 'Confirmar Horário'}
         </button>
       </form>
     </div>

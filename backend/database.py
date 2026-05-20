@@ -1,29 +1,23 @@
 import os
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import declarative_base, sessionmaker
 
-# A URL do banco de dados. No Render, você definirá isso nas variáveis de ambiente (Environment Variables).
-# O SQLite fica como fallback (plano B) para você testar localmente no seu PC antes de subir.
-SQLALCHEMY_DATABASE_URL = os.getenv(
-    "DATABASE_URL", 
-    "sqlite:///./lash_salon.db" # Arquivo local criado caso não encontre o Postgres
-)
+# Puxa a URL do banco de dados do Render, ou usa um banco local SQLite se não achar
+SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./banco_salao.db")
 
-# O SQLite exige um parâmetro extra para evitar erros de thread no FastAPI
-connect_args = {"check_same_thread": False} if SQLALCHEMY_DATABASE_URL.startswith("sqlite") else {}
+# Configuração do "Motor" do banco de dados
+if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
+    # Configuração específica para o SQLite não travar no computador
+    engine = create_engine(
+        SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+    )
+else:
+    # Se você adicionar um PostgreSQL no Render depois, ele ajusta o link automaticamente
+    if SQLALCHEMY_DATABASE_URL.startswith("postgres://"):
+        SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("postgres://", "postgresql://", 1)
+    engine = create_engine(SQLALCHEMY_DATABASE_URL)
 
-# O "engine" é o motor que gerencia a comunicação do Python com o banco de dados
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args=connect_args
-)
-
-# A sessão é o que usaremos para realizar as consultas (INSERT, SELECT, UPDATE)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Função auxiliar (Dependência) para abrir e fechar a conexão automaticamente a cada requisição
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+# AQUI ESTÁ A VARIÁVEL QUE FALTAVA!
+Base = declarative_base()
