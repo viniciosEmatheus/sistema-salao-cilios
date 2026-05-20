@@ -1,45 +1,72 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from typing import Optional, List
 from datetime import datetime
-from typing import List
 
-# Payload que o frontend vai enviar no momento do agendamento
-class BookingCreate(BaseModel):
-    client_name: str
-    client_phone: str      # Usaremos o telefone como identificador único
-    service_id: int
-    scheduled_at: datetime
+# --- SCHEMAS PARA SERVIÇOS ---
+class ServiceBase(BaseModel):
+    name: str
+    category: str
+    base_price: float
+    deposit_amount: float
+    estimated_minutes: int
 
-# Formato da resposta que a API devolverá
-class AppointmentResponse(BaseModel):
+class ServiceCreate(ServiceBase):
+    pass
+
+class ServiceResponse(ServiceBase):
     id: int
-    client_id: int
-    service_id: int
-    scheduled_at: datetime
-    
-    # O Pydantic V2 usa from_attributes para converter objetos do SQLAlchemy em JSON
+
     class Config:
         from_attributes = True
 
-class AppointmentResponse(BaseModel):
+# --- SCHEMAS PARA CLIENTES ---
+class ClientBase(BaseModel):
+    name: str
+    phone: str
+    has_henna_allergy: bool = False
+    medical_restrictions: Optional[str] = None
+
+class ClientCreate(ClientBase):
+    pass
+
+class ClientResponse(ClientBase):
     id: int
-    client_id: int
-    service_id: int
-    scheduled_at: datetime
-    
-    # Novos campos para o front-end exibir o Pix
-    payment_id: str | None = None
-    pix_copia_cola: str | None = None
-    pix_qr_code_base64: str | None = None
-    
+    created_at: datetime
+
     class Config:
         from_attributes = True
 
-class DashboardMetrics(BaseModel):
-    current_month_revenue: float     # Faturamento já garantido (sinal pago ou concluído)
-    pending_revenue: float           # Faturamento aguardando Pix
-    estimated_total_revenue: float   # Garantido + Pendente
-    total_appointments_month: int    # Quantidade de clientes no mês
+# --- SCHEMAS PARA O FINANCEIRO ---
+class FinancialBase(BaseModel):
+    total_value: float
+    deposit_paid: float
+    balance_due: float
+    payment_method: Optional[str] = None
+    machine_fee_applied: bool = False
 
-class AdminDashboardResponse(BaseModel):
-    metrics: DashboardMetrics
-    upcoming_appointments: List[AppointmentResponse] # Para a lista de alertas
+class FinancialResponse(FinancialBase):
+    id: int
+    appointment_id: int
+
+    class Config:
+        from_attributes = True
+
+# --- SCHEMAS PARA AGENDAMENTOS ---
+class AppointmentBase(BaseModel):
+    client_id: int
+    service_id: int
+    scheduled_at: datetime
+    is_maintenance: bool = False
+
+class AppointmentCreate(AppointmentBase):
+    pass
+
+class AppointmentResponse(AppointmentBase):
+    id: int
+    status: str
+    # Incluímos os detalhes do serviço e financeiro na resposta do agendamento
+    service: Optional[ServiceResponse] = None
+    financial: Optional[FinancialResponse] = None
+
+    class Config:
+        from_attributes = True

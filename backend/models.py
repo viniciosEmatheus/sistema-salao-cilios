@@ -1,59 +1,58 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, Boolean, ForeignKey, Enum as SQLEnum
+from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Text
 from sqlalchemy.orm import relationship
-from sqlalchemy.ext.declarative import declarative_base
-from datetime import datetime
-import enum
+from datetime import datetime, timezone
+from database import Base
 
-Base = declarative_base()
+class Client(Base):
+    __tablename__ = "clients"
 
-# Enum para controlar o status do agendamento de forma segura
-class AppointmentStatus(enum.Enum):
-    PENDING = "pending"       # Cliente escolheu o horário, aguardando o Pix do sinal
-    CONFIRMED = "confirmed"   # Sinal pago (Mercado Pago aprovou)
-    COMPLETED = "completed"   # Procedimento realizado
-    CANCELED = "canceled"     # Cliente desistiu ou não pagou o sinal no tempo limite
-
-class User(Base):
-    __tablename__ = "users"
-    
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True, nullable=False)
-    phone = Column(String, unique=True, nullable=False) # WhatsApp para envio de alertas
-    email = Column(String, unique=True, nullable=True)
-    is_admin = Column(Boolean, default=False) # True para a dona do salão
-    
-    appointments = relationship("Appointment", back_populates="client")
+    phone = Column(String, unique=True, index=True, nullable=False)
+    has_henna_allergy = Column(Boolean, default=False)
+    medical_restrictions = Column(Text, nullable=True) # Ex: Gestante, lactante, alergias específicas
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    # Relação: Uma cliente pode ter vários agendamentos
+    appointments = relationship("Appointment", back_populates="client", cascade="all, delete-orphan")
 
 class Service(Base):
     __tablename__ = "services"
-    
+
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True, nullable=False) # Ex: Volume Russo, Manutenção
-    description = Column(String, nullable=True)
-    price = Column(Float, nullable=False)             # Valor total (ex: 150.00)
-    deposit_amount = Column(Float, nullable=False)    # Valor do sinal (ex: 50.00)
-    
+    name = Column(String, index=True, nullable=False) # Ex: Volume Brasileiro, Brow Lamination
+    category = Column(String, nullable=False) # Ex: 'cilios', 'sobrancelha', 'remocao'
+    base_price = Column(Float, nullable=False)
+    deposit_amount = Column(Float, nullable=False) # 30.0 para cílios, 15.0 para sobrancelha
+    estimated_minutes = Column(Integer, nullable=False) # Duração em minutos para travar a agenda
+
     appointments = relationship("Appointment", back_populates="service")
 
 class Appointment(Base):
     __tablename__ = "appointments"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    client_id = Column(Integer, ForeignKey("users.id"))
-    service_id = Column(Integer, ForeignKey("services.id"))
-    
-    scheduled_at = Column(DateTime, nullable=False) # Data e hora da marcação
-    status = Column(SQLEnum(AppointmentStatus), default=AppointmentStatus.PENDING)
-    
-    # Dados de Pagamento
-    payment_id = Column(String, nullable=True) # ID da transação no Mercado Pago
-    
-    # Feedback do cliente após o serviço
-    feedback_score = Column(Integer, nullable=True) # Ex: 1 a 5 estrelas
-    feedback_text = Column(String, nullable=True)
-    
-    created_at = Column(DateTime, default=datetime.utcnow)
 
-    # Relacionamentos
-    client = relationship("User", back_populates="appointments")
+    id = Column(Integer, primary_key=True, index=True)
+    client_id = Column(Integer, ForeignKey("clients.id"), nullable=False)
+    service_id = Column(Integer, ForeignKey("services.id"), nullable=False)
+    scheduled_at = Column(DateTime, index=True, nullable=False)
+    is_maintenance = Column(Boolean, default=False)
+    status = Column(String, default="scheduled") # Opções: scheduled, completed, cancelled
+
+    # Relações
+    client = relationship("Client", back_populates="appointments")
     service = relationship("Service", back_populates="appointments")
+    # uselist=False garante relação 1 para 1 (Um agendamento tem apenas um registro financeiro)
+    financial = relationship("Financial", back_populates="appointment", uselist=False, cascade="all, delete-orphan")
+
+class Financial(Base):
+    __tablename__ = "financials"
+
+    id = Column(Integer, primary_key=True, index=True)
+    appointment_id = Column(Integer, ForeignKey("appointments.id"), unique=True, nullable=False)
+    total_value = Column(Float, nullable=False) # Preço final calculado (pode variar se for manutenção de 15, 20 ou 25 dias)
+    deposit_paid = Column(Float, default=0.0) # Valor efetivamente pago no Pix de sinal
+    balance_due = Column(Float, nullable=False) # O que falta pagar na hora (total_value - deposit_paid)
+    payment_method = Column(String, nullable=True) # 'dinheiro', 'pix', 'cartao'
+    machine_fee_applied = Column(Boolean, default=False) # True se a cliente passou cartão
+
+    appointment = relationship("Appointment", back_populates="financial")
