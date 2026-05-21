@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../api/client';
+import AdminLogin from './AdminLogin';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   PieChart, Pie, Cell, ResponsiveContainer, Legend
@@ -951,14 +952,33 @@ const TABS = [
 ];
 
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab]     = useState('agenda');
+  // ── Auth ──────────────────────────────────────────────────────────────────
+  const [token, setToken] = useState(() => sessionStorage.getItem('admin_token'));
+
+  // Ouve o evento disparado pelo interceptor axios quando recebe 401
+  useEffect(() => {
+    const handleExpired = () => setToken(null);
+    window.addEventListener('admin-session-expired', handleExpired);
+    return () => window.removeEventListener('admin-session-expired', handleExpired);
+  }, []);
+
+  const logout = () => {
+    sessionStorage.removeItem('admin_token');
+    setToken(null);
+  };
+
+  // Se não tiver token, mostra a tela de login
+  if (!token) return <AdminLogin onLogin={setToken} />;
+
+  // ── Estado do painel ──────────────────────────────────────────────────────
+  const [activeTab, setActiveTab]       = useState('agenda');
   const [appointments, setAppointments] = useState([]);
-  const [services, setServices]       = useState([]);
-  const [stats, setStats]             = useState(null);
+  const [services, setServices]         = useState([]);
+  const [stats, setStats]               = useState(null);
   const [blockedSlots, setBlockedSlots] = useState([]);
-  const [clients, setClients]         = useState([]);
-  const [loading, setLoading]         = useState(true);
-  const [error, setError]             = useState(null);
+  const [clients, setClients]           = useState([]);
+  const [loading, setLoading]           = useState(true);
+  const [error, setError]               = useState(null);
 
   const fetchAll = async () => {
     try {
@@ -1005,10 +1025,17 @@ export default function AdminDashboard() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-color)' }}>
-      <div style={{ background: '#fff', borderBottom: '1px solid var(--border-color)', padding: '16px 24px' }}>
+      <div style={{ background: '#fff', borderBottom: '1px solid var(--border-color)', padding: '14px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2 style={{ color: 'var(--primary-color)', fontWeight: '800', fontSize: '1.5rem', margin: 0 }}>
           ✨ Painel da Giovanna
         </h2>
+        <button onClick={logout} style={{
+          padding: '7px 14px', background: '#f3f4f6', color: 'var(--text-muted)',
+          border: 'none', borderRadius: '8px', fontSize: '0.82rem', fontWeight: '600',
+          cursor: 'pointer',
+        }}>
+          Sair 🔒
+        </button>
       </div>
 
       <div style={{ background: '#fff', borderBottom: '1px solid var(--border-color)', display: 'flex', overflowX: 'auto' }}>
