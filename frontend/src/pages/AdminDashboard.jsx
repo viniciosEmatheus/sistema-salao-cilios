@@ -29,6 +29,55 @@ export default function AdminDashboard() {
     return date.toLocaleDateString('pt-BR') + ' às ' + date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   };
 
+  const formatarTelefone = (phone) => {
+    const digits = (phone || '').replace(/\D/g, '');
+    return digits.startsWith('55') ? digits : `55${digits}`;
+  };
+
+  const formatarData = (dateString) => {
+    const d = new Date(dateString);
+    return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
+  };
+
+  const formatarHora = (dateString) => {
+    const d = new Date(dateString);
+    const min = d.getMinutes();
+    return `${d.getHours()}h${min > 0 ? String(min).padStart(2,'0') : ''}`;
+  };
+
+  const gerarMensagemConfirmacao = (apt) => {
+    const sinal = (apt.financial?.total_value - apt.financial?.balance_due) || 0;
+    return (
+      `Arrasou! ✨✨\n\n` +
+      `Seu horário está confirmado com sucesso!\n\n` +
+      `📅 Data: ${formatarData(apt.scheduled_at)}\n` +
+      `⏰ Horário: ${formatarHora(apt.scheduled_at)}\n` +
+      `📍 Local: Rua Ari Carneiro Fernandes 155\n` +
+      `💅 Procedimento: ${apt.service?.name}\n` +
+      `✅ Valor: ${formatCurrency(apt.financial?.total_value)} - Sinal ${formatCurrency(sinal)} PG ☑️\n\n` +
+      `Estou te esperando pra te deixar ainda mais linda ✨💅\n\n` +
+      `Qualquer imprevisto, me avisa com antecedência, tá bom?`
+    );
+  };
+
+  const gerarMensagemLembrete = (apt) => {
+    return (
+      `Oi, meu amor! ✨\n\n` +
+      `Passando pra te lembrar do seu horário comigo.\n\n` +
+      `📅 Data: ${formatarData(apt.scheduled_at)}\n` +
+      `⏰ Horário: ${formatarHora(apt.scheduled_at)}\n` +
+      `📍 Local: Rua Ari Carneiro Fernandes 155\n\n` +
+      `Te espero pra te deixar ainda mais linda ✨💅\n\n` +
+      `Peço que chegue no horário certinho, tá bom? 💕\n` +
+      `Qualquer imprevisto, me avisa.`
+    );
+  };
+
+  const abrirWhatsApp = (phone, message) => {
+    const tel = formatarTelefone(phone);
+    window.open(`https://wa.me/${tel}?text=${encodeURIComponent(message)}`, '_blank');
+  };
+
   if (loading) {
     return <div className="container"><h2 className="title">Carregando agenda...</h2></div>;
   }
@@ -73,6 +122,34 @@ export default function AdminDashboard() {
                   <strong>⚠️ Restrição Médica:</strong> {apt.client.medical_restrictions}
                 </div>
               )}
+
+              {/* Botões WhatsApp */}
+              <div style={{ marginTop: '18px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                <button
+                  onClick={() => abrirWhatsApp(apt.client?.phone, gerarMensagemConfirmacao(apt))}
+                  style={{
+                    flex: 1, minWidth: '160px', padding: '10px 14px',
+                    background: '#25D366', color: 'white', border: 'none',
+                    borderRadius: '8px', fontWeight: 'bold', fontSize: '0.88rem',
+                    cursor: 'pointer', display: 'flex', alignItems: 'center',
+                    justifyContent: 'center', gap: '6px'
+                  }}
+                >
+                  ✅ Enviar Confirmação
+                </button>
+                <button
+                  onClick={() => abrirWhatsApp(apt.client?.phone, gerarMensagemLembrete(apt))}
+                  style={{
+                    flex: 1, minWidth: '160px', padding: '10px 14px',
+                    background: '#128C7E', color: 'white', border: 'none',
+                    borderRadius: '8px', fontWeight: 'bold', fontSize: '0.88rem',
+                    cursor: 'pointer', display: 'flex', alignItems: 'center',
+                    justifyContent: 'center', gap: '6px'
+                  }}
+                >
+                  ⏰ Enviar Lembrete
+                </button>
+              </div>
             </div>
           ))}
         </div>
