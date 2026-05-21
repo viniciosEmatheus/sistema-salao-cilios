@@ -120,34 +120,33 @@ def create_booking(booking: BookingRequest, db: Session = Depends(get_db)):
         }
     }
 
-    # Se a chave for a de teste, manda um Pix falso para não quebrar a tela
+    # Tenta gerar o Pix (se falhar, o agendamento já está salvo e retorna sucesso sem Pix)
+    pix_copia_cola = None
+    pix_qr_code_base64 = None
+
     if MP_ACCESS_TOKEN == "APP_USR-TESTE-123":
-        return {
-            "message": "Agendamento salvo (Modo Teste sem chave MP)",
-            "appointment_id": appointment.id,
-            "pix_copia_cola": "ChavePixFalsaParaTestesDoSistema",
-            "pix_qr_code_base64": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
-            "total_value": total_value,
-            "deposit_amount": service.deposit_amount,
-            "balance_due": balance_due
-        }
+        # Modo de teste: não gera Pix real
+        pass
+    else:
+        try:
+            mp_response = sdk.payment().create(payment_data)
+            if mp_response["status"] == 201:
+                pix_info = mp_response["response"]["point_of_interaction"]["transaction_data"]
+                pix_copia_cola = pix_info["qr_code"]
+                pix_qr_code_base64 = pix_info["qr_code_base64"]
+        except Exception:
+            pass  # Agendamento salvo; Pix será resolvido manualmente
 
-    # Gera o Pix real
-    mp_response = sdk.payment().create(payment_data)
-    
-    if mp_response["status"] != 201:
-        raise HTTPException(status_code=400, detail="Erro ao gerar o Pix com o Mercado Pago.")
-
-    pix_info = mp_response["response"]["point_of_interaction"]["transaction_data"]
-    
     return {
         "message": "Agendamento criado com sucesso!",
         "appointment_id": appointment.id,
-        "pix_copia_cola": pix_info["qr_code"],
-        "pix_qr_code_base64": pix_info["qr_code_base64"],
+        "pix_copia_cola": pix_copia_cola,
+        "pix_qr_code_base64": pix_qr_code_base64,
         "total_value": total_value,
         "deposit_amount": service.deposit_amount,
-        "balance_due": balance_due
+        "balance_due": balance_due,
+        "service_name": service.name,
+        "client_name": client.name
     }
 
 @app.get("/appointments/", response_model=list[schemas.AppointmentResponse])

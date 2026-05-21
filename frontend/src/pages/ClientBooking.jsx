@@ -7,8 +7,16 @@ export default function ClientBooking() {
     client_name: '',
     client_phone: '',
     service_id: '',
-    scheduled_at: ''
+    scheduled_date: '',
+    scheduled_time: ''
   });
+
+  // Horários disponíveis: 08h00 até 19h30, de 30 em 30 minutos
+  const timeSlots = [];
+  for (let h = 8; h < 20; h++) {
+    timeSlots.push(`${String(h).padStart(2,'0')}:00`);
+    if (h < 19) timeSlots.push(`${String(h).padStart(2,'0')}:30`);
+  }
   
   const [pixData, setPixData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -28,23 +36,22 @@ export default function ClientBooking() {
       alert("Por favor, selecione um serviço.");
       return;
     }
-    // Validação: não permite datas no passado
-    if (new Date(formData.scheduled_at) < new Date()) {
-      alert("Não é possível agendar em uma data ou horário que já passou.");
+    if (!formData.scheduled_date || !formData.scheduled_time) {
+      alert("Por favor, escolha a data e o horário.");
       return;
     }
-    // Validação: apenas horário comercial (08h–20h)
-    const hour = new Date(formData.scheduled_at).getHours();
-    if (hour < 8 || hour >= 20) {
-      alert("Por favor, escolha um horário entre 08h e 20h.");
+    const scheduledAt = new Date(`${formData.scheduled_date}T${formData.scheduled_time}:00`);
+    if (scheduledAt < new Date()) {
+      alert("Não é possível agendar em uma data ou horário que já passou.");
       return;
     }
     setLoading(true);
     try {
       const payload = {
-        ...formData,
+        client_name: formData.client_name,
+        client_phone: formData.client_phone,
         service_id: parseInt(formData.service_id),
-        scheduled_at: new Date(formData.scheduled_at).toISOString()
+        scheduled_at: scheduledAt.toISOString()
       };
       const response = await api.post('/appointments/', payload);
       setPixData(response.data);
@@ -58,13 +65,6 @@ export default function ClientBooking() {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  // Retorna a data/hora mínima permitida (agora) no formato do input
-  const getMinDateTime = () => {
-    const now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-    return now.toISOString().slice(0, 16);
   };
 
   const scrollToForm = (serviceFilter) => {
@@ -128,21 +128,58 @@ export default function ClientBooking() {
   };
 
   if (pixData) {
+    const bookedService = services.find(s => String(s.id) === String(formData.service_id));
+    const bookedDate = new Date(`${formData.scheduled_date}T${formData.scheduled_time}:00`);
+    const formattedDate = bookedDate.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit' });
+    const formattedTime = formData.scheduled_time.replace(':', 'h');
+    const hasPix = pixData.pix_qr_code_base64 && pixData.pix_copia_cola;
+
     return (
       <div className="container pix-container" style={{ marginTop: '50px' }}>
-        <h2 className="title">Quase lá, linda! ✨</h2>
-        <p style={{ color: 'var(--text-muted)', marginBottom: '20px' }}>
-          Escaneie o QR Code abaixo para pagar o sinal e garantir sua vaga na agenda.
-          O valor será descontado no dia do atendimento!
+        <div style={{ fontSize: '3.5rem', marginBottom: '8px' }}>✅</div>
+        <h2 className="title">Horário Confirmado!</h2>
+        <p style={{ color: 'var(--text-muted)', marginBottom: '25px', fontSize: '0.95rem' }}>
+          Seu agendamento foi salvo com sucesso, {pixData.client_name?.split(' ')[0]}!
         </p>
-        <img src={`data:image/jpeg;base64,${pixData.pix_qr_code_base64}`} alt="QR Code Pix" className="pix-qrcode" />
-        <div>
-          <p style={{ marginBottom: '8px', fontWeight: 'bold' }}>Ou use o Pix Copia e Cola:</p>
-          <textarea readOnly value={pixData.pix_copia_cola} className="pix-textarea" />
-          <button className="btn-primary" onClick={() => navigator.clipboard.writeText(pixData.pix_copia_cola)}>
-            Copiar Código Pix
-          </button>
+
+        {/* Resumo do agendamento */}
+        <div style={{
+          background: '#fdf1f6', borderRadius: '12px', padding: '20px',
+          marginBottom: '25px', textAlign: 'left', lineHeight: '2'
+        }}>
+          <p>💅 <strong>{bookedService?.name || pixData.service_name}</strong></p>
+          <p>📅 {formattedDate} às {formattedTime}</p>
+          <p>📍 Rua Ari Carneiro Fernandes, 155</p>
+          <p>💰 Total: <strong>R$ {pixData.total_value?.toFixed(2).replace('.', ',')}</strong>
+            {pixData.deposit_amount > 0 && ` · Sinal: R$ ${pixData.deposit_amount?.toFixed(2).replace('.', ',')}`}
+          </p>
         </div>
+
+        {/* Pix — só aparece se foi gerado */}
+        {hasPix && (
+          <div style={{ marginBottom: '20px' }}>
+            <p style={{ fontWeight: 'bold', marginBottom: '12px', color: 'var(--text-main)' }}>
+              Pague o sinal para garantir sua vaga:
+            </p>
+            <img src={`data:image/jpeg;base64,${pixData.pix_qr_code_base64}`} alt="QR Code Pix" className="pix-qrcode" />
+            <p style={{ marginBottom: '8px', fontWeight: 'bold', marginTop: '16px' }}>Ou Pix Copia e Cola:</p>
+            <textarea readOnly value={pixData.pix_copia_cola} className="pix-textarea" />
+            <button className="btn-primary" onClick={() => navigator.clipboard.writeText(pixData.pix_copia_cola)}>
+              Copiar Código Pix
+            </button>
+          </div>
+        )}
+
+        <button
+          className="btn-primary"
+          style={{ background: 'var(--text-muted)', marginTop: '10px' }}
+          onClick={() => {
+            setPixData(null);
+            setFormData({ client_name: '', client_phone: '', service_id: '', scheduled_date: '', scheduled_time: '' });
+          }}
+        >
+          Fazer Novo Agendamento
+        </button>
       </div>
     );
   }
@@ -280,8 +317,28 @@ export default function ClientBooking() {
           </div>
           
           <div className="form-group">
-            <label>Escolha o Dia e Horário</label>
-            <input type="datetime-local" name="scheduled_at" required onChange={handleChange} min={getMinDateTime()} />
+            <label>Escolha o Dia</label>
+            <input
+              type="date"
+              name="scheduled_date"
+              required
+              onChange={handleChange}
+              min={new Date().toISOString().split('T')[0]}
+              value={formData.scheduled_date}
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Escolha o Horário</label>
+            <select name="scheduled_time" required onChange={handleChange} value={formData.scheduled_time}
+              style={{width:'100%', padding:'14px', borderRadius:'10px', border:'1px solid var(--border-color)'}}>
+              <option value="" disabled>Selecione o horário...</option>
+              {timeSlots.map(t => (
+                <option key={t} value={t}>
+                  {t.replace(':', 'h')}
+                </option>
+              ))}
+            </select>
           </div>
           
           <button type="submit" className="btn-primary" disabled={loading}>
