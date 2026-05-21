@@ -28,6 +28,17 @@ export default function ClientBooking() {
       alert("Por favor, selecione um serviço.");
       return;
     }
+    // Validação: não permite datas no passado
+    if (new Date(formData.scheduled_at) < new Date()) {
+      alert("Não é possível agendar em uma data ou horário que já passou.");
+      return;
+    }
+    // Validação: apenas horário comercial (08h–20h)
+    const hour = new Date(formData.scheduled_at).getHours();
+    if (hour < 8 || hour >= 20) {
+      alert("Por favor, escolha um horário entre 08h e 20h.");
+      return;
+    }
     setLoading(true);
     try {
       const payload = {
@@ -49,8 +60,24 @@ export default function ClientBooking() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const scrollToForm = () => {
-    setActiveModal(null); // Fecha o modal ao avançar
+  // Retorna a data/hora mínima permitida (agora) no formato do input
+  const getMinDateTime = () => {
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    return now.toISOString().slice(0, 16);
+  };
+
+  const scrollToForm = (serviceFilter) => {
+    setActiveModal(null);
+    // Pré-seleciona o serviço correspondente ao card clicado
+    if (serviceFilter && services.length > 0) {
+      const match =
+        services.find(s => s.name.includes(serviceFilter) && s.name.includes('Aplicação')) ||
+        services.find(s => s.name.includes(serviceFilter));
+      if (match) {
+        setFormData(prev => ({ ...prev, service_id: String(match.id) }));
+      }
+    }
     formRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
@@ -59,37 +86,44 @@ export default function ClientBooking() {
     brasileiro: {
       title: "Volume Brasileiro (Fio Y)",
       text: "Aplicação delicada utilizando o Fio Y, garantindo um resultado leve e harmônico para o dia a dia. O procedimento leva em torno de 2h a 3h.",
-      alert: "⚠️ Pré-procedimento: Venha sem maquiagem nos olhos e retire as lentes de contato."
+      alert: "⚠️ Pré-procedimento: Venha sem maquiagem nos olhos e retire as lentes de contato.",
+      serviceFilter: "Brasileiro"
     },
     egipcio: {
       title: "Volume Egípcio (Fio 4D)",
       text: "Técnica que utiliza o Fio 4D para proporcionar mais preenchimento e um olhar marcante, ideal para quem busca um meio-termo entre o natural e o volumoso.",
-      alert: "⚠️ Pré-procedimento: Venha sem maquiagem nos olhos e retire as lentes de contato."
+      alert: "⚠️ Pré-procedimento: Venha sem maquiagem nos olhos e retire as lentes de contato.",
+      serviceFilter: "Egípcio"
     },
     luxxo: {
       title: "Volume Luxxo (Fio 5D) e Glamour (Fio 6D)",
       text: "Para quem ama cílios bem cheios! O Fio 5D e 6D entregam o máximo de volume e destaque para um olhar incrivelmente poderoso.",
-      alert: "⚠️ Pré-procedimento: Venha sem maquiagem nos olhos e retire as lentes de contato."
+      alert: "⚠️ Pré-procedimento: Venha sem maquiagem nos olhos e retire as lentes de contato.",
+      serviceFilter: "Luxxo"
     },
     foxy: {
       title: "Volume Foxy Eyes (Curvatura M)",
       text: "Utilizando Fio 5D com Curvatura M, essa técnica cria um efeito delineado que alonga e puxa o olhar para as extremidades. Extremamente sedutor.",
-      alert: "⚠️ Pré-procedimento: Venha sem maquiagem nos olhos e retire as lentes de contato."
+      alert: "⚠️ Pré-procedimento: Venha sem maquiagem nos olhos e retire as lentes de contato.",
+      serviceFilter: "Foxy"
     },
     capping: {
       title: "Técnicas Capping (Sem Manutenção)",
       text: "A revolução! Usamos a técnica 'Capping Sanduíche' (um fio acoplado por cima e outro por baixo do fio natural). Aumenta o volume e a durabilidade para 30 dias ou mais, eliminando a necessidade de manutenções.",
-      alert: "✨ Perfeito para rotinas corridas. Disponível nos volumes Mega Brasileiro, Egípcio e Luxxo."
+      alert: "✨ Perfeito para rotinas corridas. Disponível nos volumes Mega Brasileiro, Egípcio e Luxxo.",
+      serviceFilter: "CAPPING"
     },
     sobrancelhas: {
       title: "Sobrancelhas e Lamination",
       text: "A Brow Lamination alisa e engrossa os fios (durabilidade de 30 a 50 dias). Também oferecemos Design Personalizado com ou sem Henna e depilação de buço.",
-      alert: "⚠️ Brow Lamination não é indicada para gestantes, lactantes ou pessoas em tratamento quimioterápico."
+      alert: "⚠️ Brow Lamination não é indicada para gestantes, lactantes ou pessoas em tratamento quimioterápico.",
+      serviceFilter: "Lamination Simples"
     },
     remocao: {
       title: "Remoções Químicas",
       text: "Usamos produto específico que dilui a cola e remove a extensão sem prejudicar seus fios naturais.",
-      alert: "Temos valores diferenciados para cílios feitos por nós ou de outras profissionais."
+      alert: "Temos valores diferenciados para cílios feitos por nós ou de outras profissionais.",
+      serviceFilter: "Remoção Química"
     }
   };
 
@@ -117,20 +151,31 @@ export default function ClientBooking() {
     <div>
       {/* 1. APRESENTAÇÃO E CONTATO (GIOVANNA BEAUTY) */}
       <header className="hero-section">
+        <p className="hero-badge">✦ Studio de Beleza ✦</p>
         <h1 className="hero-title">Giovanna Beauty</h1>
+        <div className="hero-divider"></div>
         <p className="hero-subtitle">Realçando a sua beleza natural com sofisticação e cuidado</p>
-        
+
         <div className="contact-badges">
           <div className="contact-item">
             <span className="contact-icon">📍</span>
             <p>Rua Ari Carneiro Fernandes, 155<br/><small style={{color: '#999'}}>Jardim dos Francos</small></p>
           </div>
-          
+
           <div className="contact-item">
             <span className="contact-icon">📱</span>
-            <p>WhatsApp:<br/><strong>(11) 99362-7584</strong></p>
+            <p>WhatsApp:<br/>
+              <a
+                href="https://wa.me/5511993627584?text=Oi%20Giovanna%2C%20vi%20o%20seu%20cat%C3%A1logo%20no%20site%20e%20gostaria%20de%20tirar%20uma%20d%C3%BAvida..."
+                target="_blank"
+                rel="noreferrer"
+                style={{color: 'var(--text-main)', fontWeight: 'bold', textDecoration: 'none'}}
+              >
+                (11) 99362-7584
+              </a>
+            </p>
           </div>
-          
+
           <div className="contact-item">
             <span className="contact-icon">📸</span>
             <p>Instagram:<br/>
@@ -236,7 +281,7 @@ export default function ClientBooking() {
           
           <div className="form-group">
             <label>Escolha o Dia e Horário</label>
-            <input type="datetime-local" name="scheduled_at" required onChange={handleChange} />
+            <input type="datetime-local" name="scheduled_at" required onChange={handleChange} min={getMinDateTime()} />
           </div>
           
           <button type="submit" className="btn-primary" disabled={loading}>
@@ -253,7 +298,7 @@ export default function ClientBooking() {
             <h3 className="modal-title">{modalDetails[activeModal].title}</h3>
             <p className="modal-text">{modalDetails[activeModal].text}</p>
             <div className="modal-alert">{modalDetails[activeModal].alert}</div>
-            <button className="btn-primary" onClick={scrollToForm}>Quero Agendar Esse!</button>
+            <button className="btn-primary" onClick={() => scrollToForm(modalDetails[activeModal].serviceFilter)}>Quero Agendar Esse!</button>
           </div>
         </div>
       )}
