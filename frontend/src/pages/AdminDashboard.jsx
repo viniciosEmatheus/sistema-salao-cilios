@@ -1,7 +1,29 @@
 import { useState, useEffect } from 'react';
 import api from '../api/client';
 
+// TESTE TEMPORÁRIO — remover depois
+function TesteVisivel() {
+  return (
+    <div style={{
+      minHeight: '100vh',
+      background: '#d8438b',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: 'white',
+      fontSize: '2rem',
+      fontWeight: 'bold',
+      gap: '20px'
+    }}>
+      <div>✅ /gerencia funcionando!</div>
+      <div style={{ fontSize: '1rem', opacity: 0.8 }}>React Router OK — carregando painel...</div>
+    </div>
+  );
+}
+
 export default function AdminDashboard() {
+  return <TesteVisivel />;
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
