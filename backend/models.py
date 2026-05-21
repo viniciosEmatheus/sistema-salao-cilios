@@ -44,6 +44,15 @@ class Appointment(Base):
     # uselist=False garante relação 1 para 1 (Um agendamento tem apenas um registro financeiro)
     financial = relationship("Financial", back_populates="appointment", uselist=False, cascade="all, delete-orphan")
 
+class BlockedSlot(Base):
+    __tablename__ = "blocked_slots"
+
+    id = Column(Integer, primary_key=True, index=True)
+    date = Column(String, nullable=False)        # Formato: YYYY-MM-DD
+    reason = Column(String, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
 class Financial(Base):
     __tablename__ = "financials"
 

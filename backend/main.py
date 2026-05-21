@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional
@@ -151,5 +152,123 @@ def create_booking(booking: BookingRequest, db: Session = Depends(get_db)):
 
 @app.get("/appointments/", response_model=list[schemas.AppointmentResponse])
 def get_appointments(db: Session = Depends(get_db)):
-    # Puxa todos os agendamentos e ordena pela data (os mais próximos primeiro)
     return db.query(models.Appointment).order_by(models.Appointment.scheduled_at.asc()).all()
+
+# --- ROTA ADMIN: AGENDAMENTO SEM PIX ---
+@app.post("/appointments/admin/")
+def create_admin_booking(booking: BookingRequest, db: Session = Depends(get_db)):
+    service = db.query(models.Service).filter(models.Service.id == booking.service_id).first()
+    if not service:
+        raise HTTPException(status_code=404, detail="Serviço não encontrado.")
+
+    client = db.query(models.Client).filter(models.Client.phone == booking.client_phone).first()
+    if not client:
+        client = models.Client(
+            name=booking.client_name,
+            phone=booking.client_phone,
+            has_henna_allergy=booking.has_henna_allergy,
+            medical_restrictions=booking.medical_restrictions
+        )
+        db.add(client)
+        db.commit()
+        db.refresh(client)
+
+    total_value = service.base_price
+    balance_due = total_value - service.deposit_amount
+
+    appointment = models.Appointment(
+        client_id=client.id,
+        service_id=service.id,
+        scheduled_at=booking.scheduled_at,
+        is_maintenance=booking.is_maintenance
+    )
+    db.add(appointment)
+    db.commit()
+    db.refresh(appointment)
+
+    financial = models.Financial(
+        appointment_id=appointment.id,
+        total_value=total_value,
+        deposit_paid=0.0,
+        balance_due=balance_due
+    )
+    db.add(financial)
+    db.commit()
+
+    return {"message": "Atendimento criado com sucesso!", "appointment_id": appointment.id}
+
+# --- ROTA: REAGENDAR ---
+class RescheduleRequest(BaseModel):
+    scheduled_at: datetime
+
+@app.put("/appointments/{appointment_id}/reagendar/")
+def reagendar_appointment(appointment_id: int, data: RescheduleRequest, db: Session = Depends(get_db)):
+    appointment = db.query(models.Appointment).filter(models.Appointment.id == appointment_id).first()
+    if not appointment:
+        raise HTTPException(status_code=404, detail="Agendamento não encontrado.")
+    appointment.scheduled_at = data.scheduled_at
+    db.commit()
+    return {"message": "Reagendado com sucesso!"}
+
+# --- ROTA: CANCELAR ---
+@app.delete("/appointments/{appointment_id}/")
+def cancelar_appointment(appointment_id: int, db: Session = Depends(get_db)):
+    appointment = db.query(models.Appointment).filter(models.Appointment.id == appointment_id).first()
+    if not appointment:
+        raise HTTPException(status_code=404, detail="Agendamento não encontrado.")
+    db.delete(appointment)
+    db.commit()
+    return {"message": "Agendamento cancelado!"}
+
+# --- ROTAS: BLOQUEIO DE AGENDA ---
+@app.post("/blocked-slots/", response_model=schemas.BlockedSlotResponse)
+def create_blocked_slot(slot: schemas.BlockedSlotCreate, db: Session = Depends(get_db)):
+    db_slot = models.BlockedSlot(**slot.dict())
+    db.add(db_slot)
+    db.commit()
+    db.refresh(db_slot)
+    return db_slot
+
+@app.get("/blocked-slots/", response_model=list[schemas.BlockedSlotResponse])
+def get_blocked_slots(db: Session = Depends(get_db)):
+    return db.query(models.BlockedSlot).order_by(models.BlockedSlot.date.asc()).all()
+
+@app.delete("/blocked-slots/{slot_id}/")
+def delete_blocked_slot(slot_id: int, db: Session = Depends(get_db)):
+    slot = db.query(models.BlockedSlot).filter(models.BlockedSlot.id == slot_id).first()
+    if not slot:
+        raise HTTPException(status_code=404, detail="Bloqueio não encontrado.")
+    db.delete(slot)
+    db.commit()
+    return {"message": "Bloqueio removido!"}
+
+# --- ROTA: ESTATÍSTICAS ---
+@app.get("/stats/")
+def get_stats(db: Session = Depends(get_db)):
+    total_appointments = db.query(models.Appointment).count()
+
+    service_counts = db.query(
+        models.Service.name,
+        models.Service.category,
+        func.count(models.Appointment.id).label("total")
+    ).outerjoin(models.Appointment, models.Service.id == models.Appointment.service_id)\
+     .group_by(models.Service.id)\
+     .order_by(func.count(models.Appointment.id).desc())\
+     .all()
+
+    fin = db.query(
+        func.coalesce(func.sum(models.Financial.total_value), 0).label("receita"),
+        func.coalesce(func.sum(models.Financial.deposit_paid), 0).label("sinais"),
+        func.coalesce(func.sum(models.Financial.balance_due), 0).label("pendente")
+    ).first()
+
+    ticket_medio = round(float(fin.receita) / total_appointments, 2) if total_appointments > 0 else 0
+
+    return {
+        "total_appointments": total_appointments,
+        "ticket_medio": ticket_medio,
+        "services": [{"name": s.name, "category": s.category, "total": s.total} for s in service_counts],
+        "total_revenue": float(fin.receita),
+        "total_deposits": float(fin.sinais),
+        "total_pending": float(fin.pendente),
+    }

@@ -51,6 +51,18 @@ class FinancialResponse(FinancialBase):
     class Config:
         from_attributes = True
 
+# --- SCHEMAS PARA BLOQUEIO DE AGENDA ---
+class BlockedSlotCreate(BaseModel):
+    date: str
+    reason: Optional[str] = None
+
+class BlockedSlotResponse(BlockedSlotCreate):
+    id: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
 # --- SCHEMAS PARA AGENDAMENTOS ---
 class AppointmentBase(BaseModel):
     client_id: int
