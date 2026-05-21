@@ -4,6 +4,7 @@ import api from '../api/client';
 export default function AdminDashboard() {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchAppointments();
@@ -13,8 +14,9 @@ export default function AdminDashboard() {
     try {
       const response = await api.get('/appointments/');
       setAppointments(response.data);
-    } catch (error) {
-      console.error("Erro ao buscar agendamentos:", error);
+    } catch (err) {
+      console.error("Erro ao buscar agendamentos:", err);
+      setError("Não foi possível conectar ao servidor. O backend pode estar iniciando — aguarde 30 segundos e recarregue a página.");
     } finally {
       setLoading(false);
     }
@@ -79,7 +81,31 @@ export default function AdminDashboard() {
   };
 
   if (loading) {
-    return <div className="container"><h2 className="title">Carregando agenda...</h2></div>;
+    return (
+      <div style={{ textAlign: 'center', marginTop: '80px' }}>
+        <div style={{ fontSize: '2.5rem', marginBottom: '16px' }}>⏳</div>
+        <h2 className="title">Carregando agenda...</h2>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+          Se demorar muito, o servidor pode estar iniciando. Aguarde 30 segundos.
+        </p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ textAlign: 'center', marginTop: '80px', padding: '20px' }}>
+        <div style={{ fontSize: '2.5rem', marginBottom: '16px' }}>⚠️</div>
+        <h2 className="title" style={{ color: '#d9534f' }}>Servidor offline</h2>
+        <p style={{ color: 'var(--text-muted)', marginBottom: '20px', maxWidth: '400px', margin: '0 auto 20px' }}>
+          {error}
+        </p>
+        <button className="btn-primary" style={{ maxWidth: '220px', margin: '0 auto' }}
+          onClick={() => { setError(null); setLoading(true); fetchAppointments(); }}>
+          Tentar novamente
+        </button>
+      </div>
+    );
   }
 
   return (
