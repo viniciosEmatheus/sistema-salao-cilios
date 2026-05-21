@@ -150,38 +150,62 @@ input:focus, select:focus {
 
 .hero-section {
   text-align: center;
-  padding: 50px 20px 30px;
-  background: linear-gradient(to bottom, #fdeaf2, var(--bg-color));
-  margin-bottom: 30px;
+  padding: 60px 20px 40px;
+  background: linear-gradient(135deg, #fdf1f6 0%, #ffffff 100%);
+  border-bottom: 1px solid #f2e1e8;
+  margin-bottom: 40px;
 }
 
 .hero-title {
   color: var(--primary-color);
-  font-size: 2.2rem;
-  margin-bottom: 10px;
+  font-size: 2.6rem;
+  margin-bottom: 8px;
   font-weight: 800;
   letter-spacing: -0.5px;
 }
 
 .hero-subtitle {
-  color: var(--text-muted);
-  font-size: 1.1rem;
-  margin-bottom: 20px;
+  color: #666;
+  font-size: 1.05rem;
+  margin-bottom: 30px;
+  font-weight: 400;
 }
 
 .contact-badges {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  font-size: 0.95rem;
-  color: var(--text-main);
-  background: white;
-  padding: 15px 20px;
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+  gap: 16px;
+  background: #ffffff;
+  padding: 25px 30px;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(209, 77, 131, 0.08); /* Sombra rosada bem suave */
   max-width: 400px;
   margin: 0 auto;
+  border: 1px solid #fdf1f6;
+}
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  text-align: left;
+  color: #555;
+  font-size: 0.95rem;
+}
+
+.contact-item p {
+  margin: 0;
+  line-height: 1.4;
+}
+
+.contact-icon {
+  font-size: 1.3rem;
+  background: #fdf1f6;
+  padding: 10px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .info-box {

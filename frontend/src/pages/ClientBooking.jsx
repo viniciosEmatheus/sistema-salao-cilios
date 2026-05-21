@@ -119,10 +119,26 @@ export default function ClientBooking() {
       <header className="hero-section">
         <h1 className="hero-title">Giovanna Beauty</h1>
         <p className="hero-subtitle">Realçando a sua beleza natural com sofisticação e cuidado</p>
+        
         <div className="contact-badges">
-          <p>📍 Rua Ari Carneiro Fernandes, n. 155 - Jardim dos Francos</p>
-          <p>📱 WhatsApp: (11) 99362-7584</p>
-          <p>📸 Instagram: <a href="https://instagram.com/giovannasoares_beauty" target="_blank" rel="noreferrer" style={{color: 'var(--primary-color)', fontWeight: 'bold', textDecoration: 'none'}}>@giovannasoares_beauty</a></p>
+          <div className="contact-item">
+            <span className="contact-icon">📍</span>
+            <p>Rua Ari Carneiro Fernandes, 155<br/><small style={{color: '#999'}}>Jardim dos Francos</small></p>
+          </div>
+          
+          <div className="contact-item">
+            <span className="contact-icon">📱</span>
+            <p>WhatsApp:<br/><strong>(11) 99362-7584</strong></p>
+          </div>
+          
+          <div className="contact-item">
+            <span className="contact-icon">📸</span>
+            <p>Instagram:<br/>
+              <a href="https://instagram.com/giovannasoares_beauty" target="_blank" rel="noreferrer" style={{color: 'var(--primary-color)', fontWeight: 'bold', textDecoration: 'none'}}>
+                @giovannasoares_beauty
+              </a>
+            </p>
+          </div>
         </div>
       </header>
 
