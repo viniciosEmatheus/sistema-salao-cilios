@@ -1,7 +1,7 @@
 import requests
 
 # URL da sua API (mude para o localhost se for rodar no seu computador)
-BASE_URL = "https://api-salao-cilios.onrender.com/services/"
+BASE_URL = "https://sistema-salao-cilios.onrender.com/services/"
 # Se estiver testando local, use: BASE_URL = "http://localhost:8000/services/"
 
 catalog = [
