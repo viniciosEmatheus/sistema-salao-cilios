@@ -126,15 +126,15 @@ export default function ClientBooking() {
         </div>
       </header>
 
-      {/* CATÁLOGO VISUAL DETALHADO */}
+      {/* CATÁLOGO VISUAL DETALHADO - AGORA COM FOTOS REAIS */}
       <h2 className="title" style={{marginTop: '40px'}}>Nosso Catálogo</h2>
       <p style={{textAlign: 'center', color: 'var(--text-muted)', marginBottom: '20px', fontSize: '0.95rem'}}>Clique no card para entender como o procedimento é feito</p>
       
       <section className="catalog-grid">
         
         <div className="catalog-card" onClick={() => setActiveModal('brasileiro')} style={{cursor: 'pointer'}}>
-          {/* O link já está pronto para receber sua foto! */}
-          <img src="/fotos/volume-brasileiro.jpg" alt="Volume Brasileiro" onError={(e) => {e.target.src = "https://images.unsplash.com/photo-1583241800698-e8ab01830a07?q=80&w=600"}} />
+          {/* Apontando para: public/fotos/volume-brasileiro-fio-y.jpg */}
+          <img src="/fotos/volume-brasileiro-fio-y.jpg" alt="Volume Brasileiro Giovanna Beauty" onError={(e) => {e.target.src = "https://images.unsplash.com/photo-1583241800698-e8ab01830a07?q=80&w=600"}} />
           <div className="catalog-card-body">
             <h4>Volume Brasileiro</h4>
             <p style={{fontSize: '0.9rem', color: 'var(--text-muted)'}}>Fio Y</p>
@@ -142,7 +142,8 @@ export default function ClientBooking() {
         </div>
 
         <div className="catalog-card" onClick={() => setActiveModal('egipcio')} style={{cursor: 'pointer'}}>
-          <img src="/fotos/volume-egipcio.jpg" alt="Volume Egípcio" onError={(e) => {e.target.src = "https://images.unsplash.com/photo-1512496015851-a90838d54446?q=80&w=600"}} />
+          {/* Apontando para: public/fotos/volume-egipicio-fio-4D.jpg */}
+          <img src="/fotos/volume-egipicio-fio-4D.jpg" alt="Volume Egípcio Giovanna Beauty" onError={(e) => {e.target.src = "https://images.unsplash.com/photo-1512496015851-a90838d54446?q=80&w=600"}} />
           <div className="catalog-card-body">
             <h4>Volume Egípcio</h4>
             <p style={{fontSize: '0.9rem', color: 'var(--text-muted)'}}>Fio 4D</p>
@@ -150,7 +151,8 @@ export default function ClientBooking() {
         </div>
 
         <div className="catalog-card" onClick={() => setActiveModal('luxxo')} style={{cursor: 'pointer'}}>
-          <img src="/fotos/volume-luxxo.jpg" alt="Volume Luxxo e Glamour" onError={(e) => {e.target.src = "https://images.unsplash.com/photo-1620052579624-9adfa8ee9c51?q=80&w=600"}} />
+          {/* Usando a foto do 5D: public/fotos/volume-luxxo-fio-5D.jpg */}
+          <img src="/fotos/volume-luxxo-fio-5D.jpg" alt="Volume Luxxo e Glamour Giovanna Beauty" onError={(e) => {e.target.src = "https://images.unsplash.com/photo-1620052579624-9adfa8ee9c51?q=80&w=600"}} />
           <div className="catalog-card-body">
             <h4>Volume Luxxo / Glamour</h4>
             <p style={{fontSize: '0.9rem', color: 'var(--text-muted)'}}>Fios 5D e 6D</p>
@@ -158,7 +160,8 @@ export default function ClientBooking() {
         </div>
 
         <div className="catalog-card" onClick={() => setActiveModal('foxy')} style={{cursor: 'pointer'}}>
-          <img src="/fotos/foxy-eyes.jpg" alt="Foxy Eyes" onError={(e) => {e.target.src = "https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?q=80&w=600"}} />
+          {/* Apontando para: public/fotos/volume-foxxy-eyes.jpg (mantendo seu nome com dois x) */}
+          <img src="/fotos/volume-foxxy-eyes.jpg" alt="Foxy Eyes Giovanna Beauty" onError={(e) => {e.target.src = "https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?q=80&w=600"}} />
           <div className="catalog-card-body">
             <h4>Volume Foxy Eyes</h4>
             <p style={{fontSize: '0.9rem', color: 'var(--text-muted)'}}>Curvatura M</p>
@@ -166,15 +169,17 @@ export default function ClientBooking() {
         </div>
 
         <div className="catalog-card" onClick={() => setActiveModal('capping')} style={{cursor: 'pointer'}}>
-          <img src="/fotos/capping.jpg" alt="Técnica Capping" onError={(e) => {e.target.src = "https://images.unsplash.com/photo-1515377905703-c4788e51af15?q=80&w=600"}} />
+          {/* Usando uma das fotos Mega (que são Capping): public/fotos/volume-mega-brasileiro.jpg */}
+          <img src="/fotos/volume-mega-brasileiro.jpg" alt="Técnica Capping Giovanna Beauty" onError={(e) => {e.target.src = "https://images.unsplash.com/photo-1515377905703-c4788e51af15?q=80&w=600"}} />
           <div className="catalog-card-body">
             <h4>Técnica Capping</h4>
-            <p style={{fontSize: '0.9rem', color: 'var(--text-muted)'}}>Sem manutenção (30+ dias)</p>
+            <p style={{fontSize: '0.9rem', color: 'var(--text-muted)'}}>Mega Retenção (Sem manutenção)</p>
           </div>
         </div>
 
         <div className="catalog-card" onClick={() => setActiveModal('sobrancelhas')} style={{cursor: 'pointer'}}>
-          <img src="/fotos/sobrancelhas.jpg" alt="Sobrancelhas e Lamination" onError={(e) => {e.target.src = "https://images.unsplash.com/photo-1616683693504-3ea7e9ad6fec?q=80&w=600"}} />
+          {/* Apontando para: public/fotos/brow-lamination.jpg (nome corrigido) */}
+          <img src="/fotos/brow-lamination.jpg" alt="Sobrancelhas e Lamination Giovanna Beauty" onError={(e) => {e.target.src = "https://images.unsplash.com/photo-1616683693504-3ea7e9ad6fec?q=80&w=600"}} />
           <div className="catalog-card-body">
             <h4>Sobrancelhas</h4>
             <p style={{fontSize: '0.9rem', color: 'var(--text-muted)'}}>Lamination, Henna e Design</p>
