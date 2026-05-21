@@ -397,74 +397,160 @@ function FinanceiroTab({ stats }) {
 
 // ─── ABA: CONFIGURAÇÕES ──────────────────────────────────────────────────────
 
+// Agrupa datas consecutivas com mesmo motivo para exibição como faixa
+function agruparBloqueios(slots) {
+  if (!slots.length) return [];
+  const sorted = [...slots].sort((a, b) => a.date.localeCompare(b.date));
+  const groups = [];
+  let grupo = { ids: [sorted[0].id], inicio: sorted[0].date, fim: sorted[0].date, reason: sorted[0].reason };
+
+  for (let i = 1; i < sorted.length; i++) {
+    const prevDate = new Date(sorted[i - 1].date);
+    prevDate.setDate(prevDate.getDate() + 1);
+    const prevNext = prevDate.toISOString().split('T')[0];
+    const mesmomotivo = sorted[i].reason === sorted[i - 1].reason;
+    if (prevNext === sorted[i].date && mesmomotivo) {
+      grupo.ids.push(sorted[i].id);
+      grupo.fim = sorted[i].date;
+    } else {
+      groups.push(grupo);
+      grupo = { ids: [sorted[i].id], inicio: sorted[i].date, fim: sorted[i].date, reason: sorted[i].reason };
+    }
+  }
+  groups.push(grupo);
+  return groups;
+}
+
+function fmtDiaMes(dateStr) {
+  const [y, m, d] = dateStr.split('-');
+  return `${d}/${m}/${y}`;
+}
+
 function ConfiguracoesTab({ blockedSlots, onRefresh }) {
-  const [date, setDate] = useState('');
-  const [reason, setReason] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [dateStart, setDateStart] = useState('');
+  const [dateEnd, setDateEnd]     = useState('');
+  const [reason, setReason]       = useState('');
+  const [loading, setLoading]     = useState(false);
+
+  const hoje = new Date().toISOString().split('T')[0];
 
   const bloquear = async () => {
-    if (!date) return alert('Escolha uma data para bloquear.');
+    if (!dateStart) return alert('Escolha a data de início.');
+    const fim = dateEnd || dateStart;
+    if (fim < dateStart) return alert('A data final deve ser igual ou posterior à data inicial.');
     setLoading(true);
     try {
-      await api.post('/blocked-slots/', { date, reason: reason || null });
-      setDate(''); setReason('');
+      await api.post('/blocked-slots/range/', {
+        date_start: dateStart,
+        date_end: fim,
+        reason: reason || null,
+      });
+      setDateStart(''); setDateEnd(''); setReason('');
       onRefresh();
-    } catch { alert('Erro ao bloquear data.'); }
+    } catch { alert('Erro ao bloquear período.'); }
     finally { setLoading(false); }
   };
 
-  const desbloquear = async (id) => {
+  const desbloquearGrupo = async (ids) => {
+    const plural = ids.length > 1 ? `os ${ids.length} dias deste período` : 'este dia';
+    if (!window.confirm(`Desbloquear ${plural}?`)) return;
     try {
-      await api.delete(`/blocked-slots/${id}/`);
+      await Promise.all(ids.map(id => api.delete(`/blocked-slots/${id}/`)));
       onRefresh();
     } catch { alert('Erro ao desbloquear.'); }
   };
+
+  const grupos = agruparBloqueios(blockedSlots);
 
   return (
     <div style={{ display: 'grid', gap: '20px', maxWidth: '600px' }}>
       {/* Fechar agenda */}
       <Card>
-        <h3 style={{ color: 'var(--primary-color)', marginBottom: '16px', fontWeight: '700' }}>🔒 Fechar agenda</h3>
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '16px' }}>
-          Bloqueia uma data para que não apareça disponível para agendamento.
+        <h3 style={{ color: 'var(--primary-color)', marginBottom: '8px', fontWeight: '700' }}>🔒 Fechar agenda</h3>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '18px' }}>
+          Selecione um dia ou período. As datas bloqueadas não aparecerão para agendamento.
         </p>
-        <div className="form-group">
-          <label>Data a bloquear</label>
-          <input type="date" value={date} onChange={e => setDate(e.target.value)}
-            min={new Date().toISOString().split('T')[0]} />
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <div className="form-group">
+            <label>Data de início *</label>
+            <input
+              type="date"
+              value={dateStart}
+              min={hoje}
+              onChange={e => {
+                setDateStart(e.target.value);
+                // auto-preenche fim com o mesmo dia se ainda não foi escolhido
+                if (!dateEnd || dateEnd < e.target.value) setDateEnd(e.target.value);
+              }}
+            />
+          </div>
+          <div className="form-group">
+            <label>Data de fim</label>
+            <input
+              type="date"
+              value={dateEnd}
+              min={dateStart || hoje}
+              onChange={e => setDateEnd(e.target.value)}
+            />
+          </div>
         </div>
+
         <div className="form-group">
           <label>Motivo (opcional)</label>
-          <input type="text" value={reason} onChange={e => setReason(e.target.value)}
-            placeholder="Ex: Viagem, compromisso pessoal..." />
+          <input
+            type="text"
+            value={reason}
+            onChange={e => setReason(e.target.value)}
+            placeholder="Ex: Viagem, compromisso pessoal, feriado..."
+          />
         </div>
+
         <button className="btn-primary" onClick={bloquear} disabled={loading}>
-          {loading ? 'Bloqueando...' : '🔒 Bloquear esta data'}
+          {loading ? 'Bloqueando...' : '🔒 Bloquear período'}
         </button>
       </Card>
 
-      {/* Datas bloqueadas */}
+      {/* Períodos bloqueados */}
       <Card>
-        <h3 style={{ color: 'var(--text-main)', marginBottom: '16px', fontWeight: '700' }}>📅 Datas bloqueadas</h3>
-        {blockedSlots.length === 0 ? (
+        <h3 style={{ color: 'var(--text-main)', marginBottom: '16px', fontWeight: '700' }}>
+          📅 Períodos bloqueados
+          {blockedSlots.length > 0 && (
+            <span style={{ fontSize: '0.8rem', fontWeight: '400', color: 'var(--text-muted)', marginLeft: '8px' }}>
+              ({blockedSlots.length} dia{blockedSlots.length > 1 ? 's' : ''})
+            </span>
+          )}
+        </h3>
+
+        {grupos.length === 0 ? (
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Nenhuma data bloqueada no momento.</p>
         ) : (
           <div style={{ display: 'grid', gap: '10px' }}>
-            {blockedSlots.map(slot => {
-              const [y, m, d] = slot.date.split('-');
-              const formatted = `${d}/${m}/${y}`;
+            {grupos.map((g, i) => {
+              const isSingleDay = g.inicio === g.fim;
+              const label = isSingleDay
+                ? `📅 ${fmtDiaMes(g.inicio)}`
+                : `📅 ${fmtDiaMes(g.inicio)} → ${fmtDiaMes(g.fim)}`;
               return (
-                <div key={slot.id} style={{
+                <div key={i} style={{
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  padding: '12px 14px', background: '#fdf1f6', borderRadius: '8px'
+                  padding: '12px 14px', background: '#fdf1f6', borderRadius: '8px', gap: '10px'
                 }}>
-                  <div>
-                    <strong style={{ color: 'var(--primary-color)' }}>📅 {formatted}</strong>
-                    {slot.reason && <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: '2px 0 0' }}>{slot.reason}</p>}
+                  <div style={{ flex: 1 }}>
+                    <strong style={{ color: 'var(--primary-color)', fontSize: '0.95rem' }}>{label}</strong>
+                    {!isSingleDay && (
+                      <span style={{ marginLeft: '8px', color: 'var(--text-muted)', fontSize: '0.82rem' }}>
+                        ({g.ids.length} dias)
+                      </span>
+                    )}
+                    {g.reason && (
+                      <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: '3px 0 0' }}>{g.reason}</p>
+                    )}
                   </div>
-                  <button onClick={() => desbloquear(slot.id)} style={{
+                  <button onClick={() => desbloquearGrupo(g.ids)} style={{
                     background: '#fee2e2', color: '#dc2626', border: 'none',
-                    borderRadius: '6px', padding: '6px 12px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.8rem'
+                    borderRadius: '6px', padding: '6px 12px', cursor: 'pointer',
+                    fontWeight: 'bold', fontSize: '0.8rem', whiteSpace: 'nowrap'
                   }}>
                     Desbloquear
                   </button>

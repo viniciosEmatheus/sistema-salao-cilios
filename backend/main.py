@@ -229,6 +229,34 @@ def create_blocked_slot(slot: schemas.BlockedSlotCreate, db: Session = Depends(g
     db.refresh(db_slot)
     return db_slot
 
+# --- ROTA: BLOQUEIO POR PERÍODO (início → fim) ---
+class BlockedRangeRequest(BaseModel):
+    date_start: str
+    date_end: str
+    reason: Optional[str] = None
+
+@app.post("/blocked-slots/range/")
+def create_blocked_range(data: BlockedRangeRequest, db: Session = Depends(get_db)):
+    from datetime import date as date_type, timedelta
+    try:
+        start = date_type.fromisoformat(data.date_start)
+        end   = date_type.fromisoformat(data.date_end)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Formato de data inválido. Use YYYY-MM-DD.")
+    if end < start:
+        raise HTTPException(status_code=400, detail="A data final deve ser igual ou posterior à data inicial.")
+    created = []
+    current = start
+    while current <= end:
+        existing = db.query(models.BlockedSlot).filter(models.BlockedSlot.date == current.isoformat()).first()
+        if not existing:
+            slot = models.BlockedSlot(date=current.isoformat(), reason=data.reason)
+            db.add(slot)
+            created.append(current.isoformat())
+        current += timedelta(days=1)
+    db.commit()
+    return {"message": f"{len(created)} dia(s) bloqueado(s).", "dates": created}
+
 @app.get("/blocked-slots/", response_model=list[schemas.BlockedSlotResponse])
 def get_blocked_slots(db: Session = Depends(get_db)):
     return db.query(models.BlockedSlot).order_by(models.BlockedSlot.date.asc()).all()
