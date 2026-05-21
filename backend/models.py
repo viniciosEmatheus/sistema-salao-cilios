@@ -9,22 +9,31 @@ class Client(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True, nullable=False)
     phone = Column(String, unique=True, index=True, nullable=False)
+    instagram = Column(String, nullable=True)
     has_henna_allergy = Column(Boolean, default=False)
-    medical_restrictions = Column(Text, nullable=True) # Ex: Gestante, lactante, alergias específicas
+    medical_restrictions = Column(Text, nullable=True)
+    # Preferências
+    favorite_volume = Column(String, nullable=True)          # Ex: "Volume Russo", "Clássico"
+    sensitivity = Column(String, nullable=True)              # baixa | media | alta
+    maintenance_frequency = Column(Integer, nullable=True)   # dias: 14, 21, 28
+    # Controle de faltas
+    no_show_count = Column(Integer, default=0)
+    cancellation_count = Column(Integer, default=0)
+    is_blocked = Column(Boolean, default=False)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
-    # Relação: Uma cliente pode ter vários agendamentos
     appointments = relationship("Appointment", back_populates="client", cascade="all, delete-orphan")
 
 class Service(Base):
     __tablename__ = "services"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True, nullable=False) # Ex: Volume Brasileiro, Brow Lamination
-    category = Column(String, nullable=False) # Ex: 'cilios', 'sobrancelha', 'remocao'
+    name = Column(String, index=True, nullable=False)
+    category = Column(String, nullable=False)  # 'cilios', 'sobrancelha', 'remocao'
     base_price = Column(Float, nullable=False)
-    deposit_amount = Column(Float, nullable=False) # 30.0 para cílios, 15.0 para sobrancelha
-    estimated_minutes = Column(Integer, nullable=False) # Duração em minutos para travar a agenda
+    deposit_amount = Column(Float, nullable=False)
+    estimated_minutes = Column(Integer, nullable=False)
+    is_active = Column(Boolean, default=True)
 
     appointments = relationship("Appointment", back_populates="service")
 
@@ -63,5 +72,8 @@ class Financial(Base):
     balance_due = Column(Float, nullable=False) # O que falta pagar na hora (total_value - deposit_paid)
     payment_method = Column(String, nullable=True) # 'dinheiro', 'pix', 'cartao'
     machine_fee_applied = Column(Boolean, default=False) # True se a cliente passou cartão
+
+    refund_amount = Column(Float, nullable=True)
+    refund_reason = Column(String, nullable=True)
 
     appointment = relationship("Appointment", back_populates="financial")

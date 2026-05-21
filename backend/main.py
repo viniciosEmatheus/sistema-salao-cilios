@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, text as sql_text
 from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional
@@ -16,6 +16,29 @@ from database import engine, SessionLocal
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="API Salão de Cílios - Giovanna Soares")
+
+# Migração automática — adiciona colunas novas sem perder dados existentes
+@app.on_event("startup")
+def run_migrations():
+    novos_campos = [
+        "ALTER TABLE clients ADD COLUMN instagram TEXT",
+        "ALTER TABLE clients ADD COLUMN favorite_volume TEXT",
+        "ALTER TABLE clients ADD COLUMN sensitivity TEXT",
+        "ALTER TABLE clients ADD COLUMN maintenance_frequency INTEGER",
+        "ALTER TABLE clients ADD COLUMN no_show_count INTEGER DEFAULT 0",
+        "ALTER TABLE clients ADD COLUMN cancellation_count INTEGER DEFAULT 0",
+        "ALTER TABLE clients ADD COLUMN is_blocked INTEGER DEFAULT 0",
+        "ALTER TABLE services ADD COLUMN is_active INTEGER DEFAULT 1",
+        "ALTER TABLE financials ADD COLUMN refund_amount REAL",
+        "ALTER TABLE financials ADD COLUMN refund_reason TEXT",
+    ]
+    with engine.connect() as conn:
+        for sql in novos_campos:
+            try:
+                conn.execute(sql_text(sql))
+                conn.commit()
+            except Exception:
+                pass  # Coluna já existe — OK
 
 # Configuração de CORS (Permite o frontend conversar com o backend)
 app.add_middleware(
@@ -299,4 +322,129 @@ def get_stats(db: Session = Depends(get_db)):
         "total_revenue": float(fin.receita),
         "total_deposits": float(fin.sinais),
         "total_pending": float(fin.pendente),
+    }
+
+# ══════════════════════════════════════════════════════════════════════════════
+# CRM — CLIENTES
+# ══════════════════════════════════════════════════════════════════════════════
+
+@app.get("/clients/", response_model=list[schemas.ClientResponse])
+def get_clients(db: Session = Depends(get_db)):
+    return db.query(models.Client).order_by(models.Client.name.asc()).all()
+
+@app.put("/clients/{client_id}/")
+def update_client(client_id: int, data: schemas.ClientUpdate, db: Session = Depends(get_db)):
+    client = db.query(models.Client).filter(models.Client.id == client_id).first()
+    if not client:
+        raise HTTPException(status_code=404, detail="Cliente não encontrada.")
+    for field, value in data.dict(exclude_none=True).items():
+        setattr(client, field, value)
+    db.commit()
+    return {"message": "Cliente atualizada!"}
+
+@app.post("/clients/{client_id}/toggle-block/")
+def toggle_block(client_id: int, db: Session = Depends(get_db)):
+    client = db.query(models.Client).filter(models.Client.id == client_id).first()
+    if not client:
+        raise HTTPException(status_code=404, detail="Cliente não encontrada.")
+    client.is_blocked = not client.is_blocked
+    db.commit()
+    return {"is_blocked": client.is_blocked}
+
+# ══════════════════════════════════════════════════════════════════════════════
+# FALTAS E CANCELAMENTO DE CLIENTE
+# ══════════════════════════════════════════════════════════════════════════════
+
+@app.post("/appointments/{appointment_id}/no-show/")
+def mark_no_show(appointment_id: int, db: Session = Depends(get_db)):
+    apt = db.query(models.Appointment).filter(models.Appointment.id == appointment_id).first()
+    if not apt:
+        raise HTTPException(status_code=404, detail="Agendamento não encontrado.")
+    apt.status = "no_show"
+    client = db.query(models.Client).filter(models.Client.id == apt.client_id).first()
+    auto_blocked = False
+    if client:
+        client.no_show_count = (client.no_show_count or 0) + 1
+        if client.no_show_count >= 2 and not client.is_blocked:
+            client.is_blocked = True
+            auto_blocked = True
+    db.commit()
+    return {"message": "Falta registrada.", "is_blocked": auto_blocked}
+
+@app.post("/appointments/{appointment_id}/cliente-cancelou/")
+def cliente_cancelou(appointment_id: int, db: Session = Depends(get_db)):
+    apt = db.query(models.Appointment).filter(models.Appointment.id == appointment_id).first()
+    if not apt:
+        raise HTTPException(status_code=404, detail="Agendamento não encontrado.")
+    client = db.query(models.Client).filter(models.Client.id == apt.client_id).first()
+    if client:
+        client.cancellation_count = (client.cancellation_count or 0) + 1
+    db.delete(apt)
+    db.commit()
+    return {"message": "Cancelamento registrado."}
+
+# ══════════════════════════════════════════════════════════════════════════════
+# CATÁLOGO — SERVIÇOS
+# ══════════════════════════════════════════════════════════════════════════════
+
+class ServiceUpdateRequest(BaseModel):
+    name: Optional[str] = None
+    category: Optional[str] = None
+    base_price: Optional[float] = None
+    deposit_amount: Optional[float] = None
+    estimated_minutes: Optional[int] = None
+    is_active: Optional[bool] = None
+
+@app.put("/services/{service_id}/")
+def update_service(service_id: int, data: ServiceUpdateRequest, db: Session = Depends(get_db)):
+    service = db.query(models.Service).filter(models.Service.id == service_id).first()
+    if not service:
+        raise HTTPException(status_code=404, detail="Serviço não encontrado.")
+    for field, value in data.dict(exclude_none=True).items():
+        setattr(service, field, value)
+    db.commit()
+    return {"message": "Serviço atualizado!"}
+
+# ══════════════════════════════════════════════════════════════════════════════
+# PAINEL VIP — CLIENTE BUSCA POR TELEFONE
+# ══════════════════════════════════════════════════════════════════════════════
+
+@app.get("/minha-conta/{phone}/")
+def minha_conta(phone: str, db: Session = Depends(get_db)):
+    phone_digits = ''.join(filter(str.isdigit, phone))
+    # busca pelos últimos 8 dígitos para tolerar prefixos (55, 0, DDDs diferentes)
+    suffix = phone_digits[-8:] if len(phone_digits) >= 8 else phone_digits
+    client = db.query(models.Client).filter(
+        models.Client.phone.contains(suffix)
+    ).first()
+    if not client:
+        raise HTTPException(status_code=404, detail="Nenhuma conta encontrada com este número.")
+    apts = db.query(models.Appointment).filter(
+        models.Appointment.client_id == client.id
+    ).order_by(models.Appointment.scheduled_at.desc()).all()
+    return {
+        "client": {
+            "id": client.id,
+            "name": client.name,
+            "phone": client.phone,
+            "instagram": client.instagram,
+            "favorite_volume": client.favorite_volume,
+            "sensitivity": client.sensitivity,
+            "maintenance_frequency": client.maintenance_frequency,
+            "has_henna_allergy": client.has_henna_allergy or False,
+            "medical_restrictions": client.medical_restrictions,
+            "no_show_count": client.no_show_count or 0,
+            "is_blocked": client.is_blocked or False,
+        },
+        "appointments": [
+            {
+                "id": a.id,
+                "scheduled_at": a.scheduled_at.isoformat(),
+                "status": a.status,
+                "service_name": a.service.name if a.service else None,
+                "total_value": a.financial.total_value if a.financial else None,
+                "balance_due": a.financial.balance_due if a.financial else None,
+            }
+            for a in apts
+        ],
     }

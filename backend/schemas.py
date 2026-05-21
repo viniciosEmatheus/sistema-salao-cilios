@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime
 
@@ -15,6 +15,7 @@ class ServiceCreate(ServiceBase):
 
 class ServiceResponse(ServiceBase):
     id: int
+    is_active: bool = True
 
     class Config:
         from_attributes = True
@@ -29,8 +30,23 @@ class ClientBase(BaseModel):
 class ClientCreate(ClientBase):
     pass
 
+class ClientUpdate(BaseModel):
+    instagram: Optional[str] = None
+    favorite_volume: Optional[str] = None
+    sensitivity: Optional[str] = None
+    maintenance_frequency: Optional[int] = None
+    has_henna_allergy: Optional[bool] = None
+    medical_restrictions: Optional[str] = None
+
 class ClientResponse(ClientBase):
     id: int
+    instagram: Optional[str] = None
+    favorite_volume: Optional[str] = None
+    sensitivity: Optional[str] = None
+    maintenance_frequency: Optional[int] = None
+    no_show_count: int = 0
+    cancellation_count: int = 0
+    is_blocked: bool = False
     created_at: datetime
 
     class Config:
@@ -47,6 +63,8 @@ class FinancialBase(BaseModel):
 class FinancialResponse(FinancialBase):
     id: int
     appointment_id: int
+    refund_amount: Optional[float] = None
+    refund_reason: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -76,7 +94,7 @@ class AppointmentCreate(AppointmentBase):
 class AppointmentResponse(AppointmentBase):
     id: int
     status: str
-    client: Optional[ClientResponse] = None  # <-- ADICIONE ESTA LINHA
+    client: Optional[ClientResponse] = None
     service: Optional[ServiceResponse] = None
     financial: Optional[FinancialResponse] = None
 
