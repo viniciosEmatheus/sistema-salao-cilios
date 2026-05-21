@@ -56,20 +56,40 @@ export default function ClientBooking() {
 
   // Conteúdos dos Modais baseados rigorosamente no catálogo técnico
   const modalDetails = {
-    cilios: {
-      title: "Extensão de Cílios Tradicional",
-      text: "Técnica minuciosa onde é acoplado um fio sintético em cada um dos seus fios naturais. Ideal para realçar o olhar com um resultado leve, harmônico e duradouro. O procedimento leva em torno de 2h a 3h dependendo da quantidade de fios naturais. Exige manutenção de 15 a 25 dias.",
-      alert: "⚠️ Pré-procedimento: Venha sem nenhuma maquiagem nos olhos (nada de rímel, lápis ou delineador). Se usar lentes de contato, traga o seu estojo para retirá-las."
+    brasileiro: {
+      title: "Volume Brasileiro (Fio Y)",
+      text: "Aplicação delicada utilizando o Fio Y, garantindo um resultado leve e harmônico para o dia a dia. O procedimento leva em torno de 2h a 3h.",
+      alert: "⚠️ Pré-procedimento: Venha sem maquiagem nos olhos e retire as lentes de contato."
+    },
+    egipcio: {
+      title: "Volume Egípcio (Fio 4D)",
+      text: "Técnica que utiliza o Fio 4D para proporcionar mais preenchimento e um olhar marcante, ideal para quem busca um meio-termo entre o natural e o volumoso.",
+      alert: "⚠️ Pré-procedimento: Venha sem maquiagem nos olhos e retire as lentes de contato."
+    },
+    luxxo: {
+      title: "Volume Luxxo (Fio 5D) e Glamour (Fio 6D)",
+      text: "Para quem ama cílios bem cheios! O Fio 5D e 6D entregam o máximo de volume e destaque para um olhar incrivelmente poderoso.",
+      alert: "⚠️ Pré-procedimento: Venha sem maquiagem nos olhos e retire as lentes de contato."
+    },
+    foxy: {
+      title: "Volume Foxy Eyes (Curvatura M)",
+      text: "Utilizando Fio 5D com Curvatura M, essa técnica cria um efeito delineado que alonga e puxa o olhar para as extremidades. Extremamente sedutor.",
+      alert: "⚠️ Pré-procedimento: Venha sem maquiagem nos olhos e retire as lentes de contato."
     },
     capping: {
-      title: "Técnica Capping (Sem Manutenção)",
-      text: "Diferente das técnicas normais, utilizamos o método 'Capping Sanduíche'. É acoplado um fio sintético por cima e outro por baixo do seu fio natural, formando uma prensa perfeita. Isso aumenta drasticamente o volume e a retenção, fazendo com que os cílios durem 30 dias ou mais sem necessidade de manutenção!",
-      alert: "✨ Perfeito para quem tem a rotina corrida e quer acordar pronta o mês inteiro sem se preocupar com visitas frequentes ao salão."
+      title: "Técnicas Capping (Sem Manutenção)",
+      text: "A revolução! Usamos a técnica 'Capping Sanduíche' (um fio acoplado por cima e outro por baixo do fio natural). Aumenta o volume e a durabilidade para 30 dias ou mais, eliminando a necessidade de manutenções.",
+      alert: "✨ Perfeito para rotinas corridas. Disponível nos volumes Mega Brasileiro, Egípcio e Luxxo."
     },
     sobrancelhas: {
-      title: "Brow Lamination & Design",
-      text: "Procedimento químico avançado que alisa e alinha os pelos das sobrancelhas, deixando-as mais encorpadas e corrigindo falhas. O efeito levanta o olhar e deixa a sobrancelha naturalmente mais grossa, reforçando o seu design por 30 a 50 dias.",
-      alert: "⚠️ Atenção: Não indicado para gestantes, lactantes ou pessoas em tratamento quimioterápico. Evite o uso de ácidos faciais antes do processo."
+      title: "Sobrancelhas e Lamination",
+      text: "A Brow Lamination alisa e engrossa os fios (durabilidade de 30 a 50 dias). Também oferecemos Design Personalizado com ou sem Henna e depilação de buço.",
+      alert: "⚠️ Brow Lamination não é indicada para gestantes, lactantes ou pessoas em tratamento quimioterápico."
+    },
+    remocao: {
+      title: "Remoções Químicas",
+      text: "Usamos produto específico que dilui a cola e remove a extensão sem prejudicar seus fios naturais.",
+      alert: "Temos valores diferenciados para cílios feitos por nós ou de outras profissionais."
     }
   };
 
@@ -106,37 +126,61 @@ export default function ClientBooking() {
         </div>
       </header>
 
-      {/* 2. CATÁLOGO DE SERVIÇOS (VEIO PARA O TOPO) */}
+      {/* CATÁLOGO VISUAL DETALHADO */}
       <h2 className="title" style={{marginTop: '40px'}}>Nosso Catálogo</h2>
       <p style={{textAlign: 'center', color: 'var(--text-muted)', marginBottom: '20px', fontSize: '0.95rem'}}>Clique no card para entender como o procedimento é feito</p>
       
       <section className="catalog-grid">
-        <div className="catalog-card" onClick={() => setActiveModal('cilios')} style={{cursor: 'pointer'}}>
-          <img src="https://images.unsplash.com/photo-1583241800698-e8ab01830a07?q=80&w=600" alt="Volume Brasileiro" />
+        
+        <div className="catalog-card" onClick={() => setActiveModal('brasileiro')} style={{cursor: 'pointer'}}>
+          {/* O link já está pronto para receber sua foto! */}
+          <img src="/fotos/volume-brasileiro.jpg" alt="Volume Brasileiro" onError={(e) => {e.target.src = "https://images.unsplash.com/photo-1583241800698-e8ab01830a07?q=80&w=600"}} />
           <div className="catalog-card-body">
-            <h4>Volume Brasileiro e Extensões</h4>
-            <p style={{fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: 'normal', marginBottom: '5px'}}>Técnicas com manutenção</p>
-            <p>Ver Detalhes e Explicação</p>
+            <h4>Volume Brasileiro</h4>
+            <p style={{fontSize: '0.9rem', color: 'var(--text-muted)'}}>Fio Y</p>
+          </div>
+        </div>
+
+        <div className="catalog-card" onClick={() => setActiveModal('egipcio')} style={{cursor: 'pointer'}}>
+          <img src="/fotos/volume-egipcio.jpg" alt="Volume Egípcio" onError={(e) => {e.target.src = "https://images.unsplash.com/photo-1512496015851-a90838d54446?q=80&w=600"}} />
+          <div className="catalog-card-body">
+            <h4>Volume Egípcio</h4>
+            <p style={{fontSize: '0.9rem', color: 'var(--text-muted)'}}>Fio 4D</p>
+          </div>
+        </div>
+
+        <div className="catalog-card" onClick={() => setActiveModal('luxxo')} style={{cursor: 'pointer'}}>
+          <img src="/fotos/volume-luxxo.jpg" alt="Volume Luxxo e Glamour" onError={(e) => {e.target.src = "https://images.unsplash.com/photo-1620052579624-9adfa8ee9c51?q=80&w=600"}} />
+          <div className="catalog-card-body">
+            <h4>Volume Luxxo / Glamour</h4>
+            <p style={{fontSize: '0.9rem', color: 'var(--text-muted)'}}>Fios 5D e 6D</p>
+          </div>
+        </div>
+
+        <div className="catalog-card" onClick={() => setActiveModal('foxy')} style={{cursor: 'pointer'}}>
+          <img src="/fotos/foxy-eyes.jpg" alt="Foxy Eyes" onError={(e) => {e.target.src = "https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?q=80&w=600"}} />
+          <div className="catalog-card-body">
+            <h4>Volume Foxy Eyes</h4>
+            <p style={{fontSize: '0.9rem', color: 'var(--text-muted)'}}>Curvatura M</p>
           </div>
         </div>
 
         <div className="catalog-card" onClick={() => setActiveModal('capping')} style={{cursor: 'pointer'}}>
-          <img src="https://images.unsplash.com/photo-1620052579624-9adfa8ee9c51?q=80&w=600" alt="Técnica Capping" />
+          <img src="/fotos/capping.jpg" alt="Técnica Capping" onError={(e) => {e.target.src = "https://images.unsplash.com/photo-1515377905703-c4788e51af15?q=80&w=600"}} />
           <div className="catalog-card-body">
-            <h4>Técnica Capping Premium</h4>
-            <p style={{fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: 'normal', marginBottom: '5px'}}>Retenção 30+ dias (Sem manutenção)</p>
-            <p>Ver Detalhes e Explicação</p>
+            <h4>Técnica Capping</h4>
+            <p style={{fontSize: '0.9rem', color: 'var(--text-muted)'}}>Sem manutenção (30+ dias)</p>
           </div>
         </div>
 
         <div className="catalog-card" onClick={() => setActiveModal('sobrancelhas')} style={{cursor: 'pointer'}}>
-          <img src="https://images.unsplash.com/photo-1512496015851-a90838d54446?q=80&w=600" alt="Brow Lamination" />
+          <img src="/fotos/sobrancelhas.jpg" alt="Sobrancelhas e Lamination" onError={(e) => {e.target.src = "https://images.unsplash.com/photo-1616683693504-3ea7e9ad6fec?q=80&w=600"}} />
           <div className="catalog-card-body">
-            <h4>Sobrancelhas e Lamination</h4>
-            <p style={{fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: 'normal', marginBottom: '5px'}}>Design, Henna e Alinhamento</p>
-            <p>Ver Detalhes e Explicação</p>
+            <h4>Sobrancelhas</h4>
+            <p style={{fontSize: '0.9rem', color: 'var(--text-muted)'}}>Lamination, Henna e Design</p>
           </div>
         </div>
+
       </section>
 
       {/* 3. REGRAS DE AGENDAMENTO E SINAL (VEIO DEPOIS DO CATÁLOGO) */}
