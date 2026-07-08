@@ -349,6 +349,24 @@
   .brain-log .le-addon { color: var(--critical); }
   .brain-log .le-t { color: var(--muted); }
 
+  .act.warn { border-color: rgba(224,163,62,.5); color: #e0a33e; }
+  .act.warn:hover { border-color: #e0a33e; background: rgba(224,163,62,.1); }
+  .brain-legend {
+    display: flex; flex-wrap: wrap; gap: 6px 20px; justify-content: center;
+    margin-top: 12px; font-family: var(--mono); font-size: 11.5px; color: var(--ink-2);
+  }
+  .brain-legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .brain-legend i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .brain-legend i.hollow { background: transparent; border: 1.5px dashed var(--muted); }
+  .brain-legend i.pdot { width: 6px; height: 6px; background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+  .life-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(185px, 1fr)); gap: 12px; }
+  .life { background: var(--page); border: 1px solid var(--grid); border-radius: 8px; padding: 15px 16px; border-top: 3px solid var(--baseline); }
+  .life.ok { border-top-color: var(--accent); }
+  .life.bad { border-top-color: var(--critical); }
+  .life.warn { border-top-color: #e0a33e; }
+  .life h5 { font-family: var(--mono); font-size: 12.5px; margin: 0 0 8px; color: var(--ink); letter-spacing: .03em; }
+  .life p { font-size: 12.8px; color: var(--ink-2); margin: 0; line-height: 1.55; }
+
   /* ================= eventos NEBULA ================= */
   .ev-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
   .ev { background: var(--page); border: 1px solid var(--grid); border-radius: 8px; padding: 16px 18px; }
@@ -782,12 +800,20 @@ alerta = det.predict(x_log) == ANOMALY</pre>
       </div>
       <div class="btns">
         <button id="btnPoison" class="act bad">⚡ envenenar nó</button>
+        <button id="btnHeal" class="act warn">💊 sanear nó</button>
         <button id="btnCut" class="act">✂ cortar ligação</button>
         <button id="btnReset" class="act">↻ reiniciar</button>
       </div>
     </div>
     <canvas id="brain" aria-label="Simulação interativa de uma federação de nós de aprendizagem"></canvas>
-    <div class="brain-hint">clique num neurônio para envenená-lo · a federação audita a reputação e o expulsa sozinha</div>
+    <div class="brain-legend">
+      <span><i style="background:#4cc9d4"></i>saudável</span>
+      <span><i style="background:#e0a33e"></i>em observação</span>
+      <span><i style="background:#e66767"></i>envenenado</span>
+      <span><i class="hollow"></i>expulso</span>
+      <span><i class="pdot"></i>pulso = pesos do modelo</span>
+    </div>
+    <div class="brain-hint">clique num neurônio: saudável → envenena · envenenado → cura · expulso → readmite</div>
     <div class="brain-stats">
       <div class="bs"><span class="k">rodada</span><span class="v" id="stRound">0</span></div>
       <div class="bs"><span class="k">nós ativos</span><span class="v" id="stNodes">—</span></div>
@@ -800,6 +826,41 @@ alerta = det.predict(x_log) == ANOMALY</pre>
       </div>
     </div>
     <div class="brain-log" id="brainLog" aria-live="polite"></div>
+  </div>
+
+  <div class="card" style="margin-top:22px">
+    <h3 class="block-title">O que significa “envenenar um nó” — e como ele se cura</h3>
+    <p class="block-sub">o ciclo de vida de um neurônio da federação · [2, 11]</p>
+    <div class="life-grid">
+      <div class="life ok">
+        <h5>1 · Saudável</h5>
+        <p>O dispositivo treina o modelo com os <em>próprios</em> dados e, a cada rodada,
+        envia aos vizinhos apenas os pesos aprendidos — nunca os dados.</p>
+      </div>
+      <div class="life bad">
+        <h5>2 · Envenenado</h5>
+        <p><em>Model poisoning</em>: um atacante compromete o dispositivo. Ele continua
+        participando — mas envia gradientes adulterados que puxam a acurácia do modelo
+        global para baixo. Repare na barra ficando vermelha.</p>
+      </div>
+      <div class="life">
+        <h5>3 · Auditoria distribuída</h5>
+        <p>Sem autoridade central, os vizinhos comparam cada atualização recebida com o
+        consenso. A reputação do nó desviante (o anel ao redor dele) cai a cada rodada.</p>
+      </div>
+      <div class="life">
+        <h5>4a · Expulsão automática</h5>
+        <p>Reputação abaixo de 40: a federação isola o nó sozinha — ele vira um anel oco
+        com ✕ e suas ligações adormecem. A acurácia se recupera nas rodadas seguintes.</p>
+      </div>
+      <div class="life warn">
+        <h5>4b · Cura — sanear</h5>
+        <p>Clique no nó envenenado (ou use 💊): o operador <em>re-imageia</em> o
+        dispositivo. Ele volta <b>em observação</b> (âmbar) e reconstrói a reputação até
+        ser pleno. Um nó já expulso pode ser <b>readmitido</b> com um clique — também em
+        observação.</p>
+      </div>
+    </div>
   </div>
 
   <div class="card" style="margin-top:22px">
@@ -1178,24 +1239,25 @@ document.querySelectorAll("[data-tip]").forEach(el => {
 
 /* ================================================================
    O CÉREBRO — simulador de aprendizagem federada descentralizada
-   (NEBULA-like: eventos assíncronos, reputação, expulsão de nós)
+   (NEBULA-like: eventos assíncronos, reputação, expulsão e cura)
    ================================================================ */
 (function () {
   const cv = document.getElementById("brain");
   const ctx = cv.getContext("2d");
   const DPR = Math.min(devicePixelRatio || 1, 2);
   const N = 22, ROUND_MS = 2400;
-  const COL = {
-    ok: "#4cc9d4", okDim: "rgba(76,201,212,", bad: "#e66767",
-    badDim: "rgba(230,103,103,", out: "#3a4655",
-    edge: "rgba(76,201,212,0.16)", edgeHi: "rgba(76,201,212,0.45)",
+  const C = {
+    ok: "#4cc9d4", warn: "#e0a33e", bad: "#e66767", out: "#4a5768",
+    okA: a => `rgba(76,201,212,${a})`,
+    badA: a => `rgba(230,103,103,${a})`,
+    warnA: a => `rgba(224,163,62,${a})`,
+    edge: "rgba(76,201,212,0.15)", edgeHi: "rgba(76,201,212,0.5)",
+    dormant: "rgba(100,118,138,0.18)",
   };
   let S = null, hoverN = -1, lastRoundAt = 0, phase = 0;
+  const pad2 = i => String(i).padStart(2, "0");
 
-  function size() {
-    cv.width = cv.offsetWidth * DPR;
-    cv.height = cv.offsetHeight * DPR;
-  }
+  function size() { cv.width = cv.offsetWidth * DPR; cv.height = cv.offsetHeight * DPR; }
 
   function build(topo) {
     size();
@@ -1214,7 +1276,10 @@ document.querySelectorAll("[data-tip]").forEach(el => {
       }
       nodes.push({ x, y, rep: 100, poisoned: false, active: true, glow: 0, ph: Math.random() * 6.28 });
     }
-    const add = (a, b) => { if (a !== b && !edges.some(e => (e.a === a && e.b === b) || (e.a === b && e.b === a))) edges.push({ a, b }); };
+    const add = (a, b) => {
+      if (a !== b && !edges.some(e => (e.a === a && e.b === b) || (e.a === b && e.b === a)))
+        edges.push({ a, b, cut: false, bend: ((a + b) % 2 ? 1 : -1) * (0.05 + ((a * 7 + b * 13) % 10) / 110) });
+    };
     if (topo === "anel") for (let i = 0; i < N; i++) add(i, (i + 1) % N);
     else if (star) for (let i = 1; i < N; i++) add(0, i);
     else {
@@ -1228,11 +1293,24 @@ document.querySelectorAll("[data-tip]").forEach(el => {
     stats();
   }
 
+  const aliveE = e => !e.cut && S.nodes[e.a].active && S.nodes[e.b].active;
+
+  // Geometria da curva (sinapse): bézier quadrática com leve arco.
+  function edgeGeo(e) {
+    const A = S.nodes[e.a], B = S.nodes[e.b];
+    const mx = (A.x + B.x) / 2, my = (A.y + B.y) / 2;
+    return { A, B, cx: mx - (B.y - A.y) * e.bend, cy: my + (B.x - A.x) * e.bend };
+  }
+  const qPoint = (g, t) => ({
+    x: (1 - t) * (1 - t) * g.A.x + 2 * (1 - t) * t * g.cx + t * t * g.B.x,
+    y: (1 - t) * (1 - t) * g.A.y + 2 * (1 - t) * t * g.cy + t * t * g.B.y,
+  });
+
   const logBox = document.getElementById("brainLog");
   function logLine(cls, msg) {
     const r = S ? S.round : 0;
     logBox.insertAdjacentHTML("afterbegin",
-      `<div><span class="le-t">[r${String(r).padStart(2, "0")}]</span> <span class="${cls}">${
+      `<div><span class="le-t">[r${pad2(r)}]</span> <span class="${cls}">${
         cls === "le-node" ? "NodeEvent" : cls === "le-msg" ? "MessageEvent" : "AddonEvent"
       }</span> · ${msg}</div>`);
     while (logBox.children.length > 24) logBox.lastChild.remove();
@@ -1242,75 +1320,87 @@ document.querySelectorAll("[data-tip]").forEach(el => {
     const act = S.nodes.filter(n => n.active);
     document.getElementById("stRound").textContent = S.round;
     document.getElementById("stNodes").textContent = act.length + "/" + N;
-    document.getElementById("stEdges").textContent = S.edges.length;
+    document.getElementById("stEdges").textContent = S.edges.filter(aliveE).length;
     document.getElementById("stRep").textContent =
       Math.round(act.reduce((s, n) => s + n.rep, 0) / Math.max(act.length, 1));
     document.getElementById("stAcc").textContent = fmt(S.acc, 1) + "%";
     document.getElementById("accFill").style.width = S.acc + "%";
     document.getElementById("accFill").style.background =
-      S.nodes.some(n => n.poisoned && n.active) ? COL.bad : "var(--accent)";
+      S.nodes.some(n => n.poisoned && n.active) ? C.bad : "var(--accent)";
   }
 
   function doRound() {
     S.round++;
-    const act = i => S.nodes[i].active;
-    // treino local (NodeEvent) — brilho
     for (const n of S.nodes) if (n.active) n.glow = 1;
     if (S.round % 4 === 1) logLine("le-node", "ronda de treino local concluída nos nós ativos");
-    // pulsos de agregação (MessageEvent)
+
     if (!REDUCED) for (const e of S.edges) {
-      if (!act(e.a) || !act(e.b)) continue;
+      if (!aliveE(e)) continue;
       const flip = Math.random() < 0.5;
-      S.pulses.push({ a: flip ? e.a : e.b, b: flip ? e.b : e.a, t: 0,
-        bad: S.nodes[flip ? e.a : e.b].poisoned });
+      S.pulses.push({ e, rev: !flip, t: 0, bad: S.nodes[flip ? e.a : e.b].poisoned });
     }
-    // acurácia do modelo global
-    const poisonedActive = S.nodes.filter(n => n.poisoned && n.active).length;
-    if (poisonedActive) {
-      S.acc = Math.max(35, S.acc - 5.5 * poisonedActive + (97 - S.acc) * 0.06);
+
+    const poisonedActive = S.nodes.filter(n => n.poisoned && n.active);
+    if (poisonedActive.length) {
+      S.acc = Math.max(35, S.acc - 5.5 * poisonedActive.length + (97 - S.acc) * 0.06);
+      if (S.round % 3 === 0)
+        logLine("le-msg", `agregação recebendo pesos adulterados do nó ${pad2(S.nodes.indexOf(poisonedActive[0]))} — acurácia degradando`);
     } else {
       S.acc = S.acc + (97 - S.acc) * 0.22;
     }
-    // reputação: a federação audita os vizinhos
+
     S.nodes.forEach((n, i) => {
       if (!n.active) return;
       if (n.poisoned) {
         n.rep = Math.max(0, n.rep - 13);
         if (n.rep <= 40) {
-          n.active = false;
-          S.edges = S.edges.filter(e => e.a !== i && e.b !== i);
-          logLine("le-addon", `nó ${String(i).padStart(2, "0")} EXPULSO da federação (reputação ${Math.round(n.rep)})`);
+          n.active = false; n.poisoned = false;
+          logLine("le-addon", `nó ${pad2(i)} EXPULSO da federação (reputação ${Math.round(n.rep)}) — ligações adormecidas`);
           logLine("le-node", "agregação retomada sem o nó malicioso — modelo recuperando");
         }
-      } else n.rep = Math.min(100, n.rep + 2);
+      } else n.rep = Math.min(100, n.rep + 6);
     });
     stats();
   }
 
-  /* ---------- ações ---------- */
-  function poison(i) {
-    if (i == null) {
-      const c = S.nodes.map((n, j) => j).filter(j => S.nodes[j].active && !S.nodes[j].poisoned);
-      if (!c.length) return;
-      i = c[Math.floor(Math.random() * c.length)];
-    }
+  /* ---------- ações: envenenar · sanear · readmitir · cortar ---------- */
+  function actOn(i) {
     const n = S.nodes[i];
-    if (!n.active) return;
-    if (n.poisoned) { n.poisoned = false; n.rep = 70; logLine("le-node", `nó ${String(i).padStart(2,"0")} saneado manualmente`); }
-    else { n.poisoned = true; logLine("le-addon", `injeção adversarial no nó ${String(i).padStart(2,"0")} (model poisoning)`); }
+    if (!n.active) {          // readmitir
+      n.active = true; n.rep = 50; n.poisoned = false;
+      logLine("le-node", `nó ${pad2(i)} readmitido em observação (reputação 50) — ligações reativadas`);
+    } else if (n.poisoned) {  // sanear
+      n.poisoned = false; n.rep = Math.max(n.rep, 55);
+      logLine("le-node", `nó ${pad2(i)} saneado (re-imagem do dispositivo) — em observação até reputação plena`);
+    } else {                  // envenenar
+      n.poisoned = true;
+      logLine("le-addon", `injeção adversarial no nó ${pad2(i)} — gradientes corrompidos entram na agregação`);
+    }
     stats();
   }
-  function cut() {
-    if (!S.edges.length) return;
-    const k = Math.floor(Math.random() * S.edges.length);
-    const e = S.edges[k];
-    S.flash = { ...e, t: 1 };
-    S.edges.splice(k, 1);
-    logLine("le-msg", `ligação ${String(e.a).padStart(2,"0")}↔${String(e.b).padStart(2,"0")} cortada — nós sobreviventes seguem treinando`);
-    stats();
+  function randomWhere(pred) {
+    const c = S.nodes.map((_, j) => j).filter(pred);
+    return c.length ? c[Math.floor(Math.random() * c.length)] : null;
   }
-  document.getElementById("btnPoison").addEventListener("click", () => poison(null));
-  document.getElementById("btnCut").addEventListener("click", cut);
+  document.getElementById("btnPoison").addEventListener("click", () => {
+    const i = randomWhere(j => S.nodes[j].active && !S.nodes[j].poisoned);
+    if (i != null) actOn(i);
+  });
+  document.getElementById("btnHeal").addEventListener("click", () => {
+    let i = randomWhere(j => S.nodes[j].poisoned);
+    if (i == null) i = randomWhere(j => !S.nodes[j].active);   // nada envenenado? readmite
+    if (i != null) actOn(i);
+    else logLine("le-node", "nada a sanear — todos os nós estão saudáveis");
+  });
+  document.getElementById("btnCut").addEventListener("click", () => {
+    const alive = S.edges.filter(aliveE);
+    if (!alive.length) return;
+    const e = alive[Math.floor(Math.random() * alive.length)];
+    e.cut = true;
+    S.flash = { e, t: 1 };
+    logLine("le-msg", `ligação ${pad2(e.a)}↔${pad2(e.b)} cortada — nós sobreviventes seguem treinando`);
+    stats();
+  });
   document.getElementById("btnReset").addEventListener("click", () => { logBox.innerHTML = ""; build(S.topo); });
   document.querySelectorAll(".seg button").forEach(b =>
     b.addEventListener("click", () => {
@@ -1324,7 +1414,7 @@ document.querySelectorAll("[data-tip]").forEach(el => {
   function nodeAt(ev) {
     const r = cv.getBoundingClientRect();
     const x = (ev.clientX - r.left) * DPR, y = (ev.clientY - r.top) * DPR;
-    let best = -1, bd = 22 * DPR;
+    let best = -1, bd = 24 * DPR;
     S.nodes.forEach((n, i) => {
       const d = Math.hypot(n.x - x, n.y - y);
       if (d < bd) { bd = d; best = i; }
@@ -1333,74 +1423,89 @@ document.querySelectorAll("[data-tip]").forEach(el => {
   }
   cv.addEventListener("pointermove", ev => {
     hoverN = nodeAt(ev);
+    cv.style.cursor = hoverN >= 0 ? "pointer" : "default";
     if (hoverN >= 0) {
       const n = S.nodes[hoverN];
-      showTip(ev, `nó <b>${String(hoverN).padStart(2, "0")}</b> · ${
-        !n.active ? "expulso" : n.poisoned ? "⚠ envenenado" : "saudável"
-      }<br>reputação <b>${Math.round(n.rep)}</b> — clique para ${n.poisoned ? "sanear" : "envenenar"}`);
+      const estado = !n.active ? "⛔ expulso" : n.poisoned ? "⚠ envenenado" : n.rep < 90 ? "🟠 em observação" : "✓ saudável";
+      const acao = !n.active ? "readmitir" : n.poisoned ? "sanear (curar)" : "envenenar";
+      showTip(ev, `nó <b>${pad2(hoverN)}</b> · ${estado}<br>reputação <b>${Math.round(n.rep)}</b>/100 — clique para <b>${acao}</b>`);
     } else hideTip();
   });
   cv.addEventListener("pointerleave", () => { hoverN = -1; hideTip(); });
-  cv.addEventListener("click", ev => { const i = nodeAt(ev); if (i >= 0) poison(i); });
+  cv.addEventListener("click", ev => { const i = nodeAt(ev); if (i >= 0) actOn(i); });
 
   /* ---------- desenho ---------- */
   function draw(t) {
     const W = cv.width, H = cv.height;
     ctx.clearRect(0, 0, W, H);
     phase = t / 1000;
-    // ligações
+
     for (const e of S.edges) {
-      const A = S.nodes[e.a], B = S.nodes[e.b];
-      const hi = hoverN === e.a || hoverN === e.b;
-      ctx.strokeStyle = hi ? COL.edgeHi : COL.edge;
-      ctx.lineWidth = (hi ? 1.6 : 1) * DPR;
-      ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(B.x, B.y); ctx.stroke();
+      if (e.cut) continue;
+      const g = edgeGeo(e);
+      const dormant = !aliveE(e);
+      const hi = !dormant && (hoverN === e.a || hoverN === e.b);
+      ctx.strokeStyle = dormant ? C.dormant : hi ? C.edgeHi : C.edge;
+      ctx.lineWidth = (hi ? 1.7 : 1) * DPR;
+      if (dormant) ctx.setLineDash([4 * DPR, 6 * DPR]);
+      ctx.beginPath(); ctx.moveTo(g.A.x, g.A.y);
+      ctx.quadraticCurveTo(g.cx, g.cy, g.B.x, g.B.y); ctx.stroke();
+      ctx.setLineDash([]);
     }
-    // corte em flash
+
     if (S.flash && S.flash.t > 0) {
-      const A = S.nodes[S.flash.a], B = S.nodes[S.flash.b];
-      ctx.strokeStyle = COL.badDim + S.flash.t + ")";
+      const g = edgeGeo(S.flash.e);
+      ctx.strokeStyle = C.badA(S.flash.t);
       ctx.lineWidth = 2 * DPR; ctx.setLineDash([6 * DPR, 5 * DPR]);
-      ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(B.x, B.y); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(g.A.x, g.A.y);
+      ctx.quadraticCurveTo(g.cx, g.cy, g.B.x, g.B.y); ctx.stroke();
       ctx.setLineDash([]);
       S.flash.t -= 0.02;
     }
-    // pulsos
-    S.pulses = S.pulses.filter(p => p.t < 1);
+
+    S.pulses = S.pulses.filter(p => p.t < 1 && aliveE(p.e));
     for (const p of S.pulses) {
       p.t += 0.022;
-      const A = S.nodes[p.a], B = S.nodes[p.b];
-      const x = A.x + (B.x - A.x) * p.t, y = A.y + (B.y - A.y) * p.t;
-      ctx.beginPath(); ctx.arc(x, y, 2.2 * DPR, 0, 6.29);
-      ctx.fillStyle = p.bad ? COL.bad : COL.ok;
-      ctx.fill();
+      const g = edgeGeo(p.e);
+      const pt = qPoint(g, p.rev ? 1 - p.t : p.t);
+      ctx.beginPath(); ctx.arc(pt.x, pt.y, 2.2 * DPR, 0, 6.29);
+      ctx.fillStyle = p.bad ? C.bad : C.ok;
+      ctx.shadowColor = p.bad ? C.bad : C.ok; ctx.shadowBlur = 6 * DPR;
+      ctx.fill(); ctx.shadowBlur = 0;
     }
-    // neurônios
+
     S.nodes.forEach((n, i) => {
       const base = (S.topo === "estrela" && i === 0 ? 8.5 : 6) * DPR;
       const breathe = REDUCED ? 0 : Math.sin(phase * 1.6 + n.ph) * 0.6 * DPR;
       const r = base + breathe + n.glow * 2.5 * DPR;
       if (n.glow > 0) n.glow = Math.max(0, n.glow - 0.02);
-      // halo
-      if (n.active) {
+      const color = n.poisoned ? C.bad : (n.rep < 90 ? C.warn : C.ok);
+      const halo = n.poisoned ? C.badA : (n.rep < 90 ? C.warnA : C.okA);
+
+      if (!n.active) {         // expulso: anel oco tracejado + ✕
+        ctx.beginPath(); ctx.arc(n.x, n.y, base, 0, 6.29);
+        ctx.strokeStyle = C.out; ctx.lineWidth = 1.4 * DPR;
+        ctx.setLineDash([3 * DPR, 3 * DPR]); ctx.stroke(); ctx.setLineDash([]);
+        const s = base * 0.45;
+        ctx.strokeStyle = C.out; ctx.lineWidth = 1.4 * DPR;
+        ctx.beginPath();
+        ctx.moveTo(n.x - s, n.y - s); ctx.lineTo(n.x + s, n.y + s);
+        ctx.moveTo(n.x + s, n.y - s); ctx.lineTo(n.x - s, n.y + s);
+        ctx.stroke();
+      } else {
+        const pulse = n.poisoned && !REDUCED ? 0.55 + 0.45 * Math.sin(phase * 5 + n.ph) : 1;
         ctx.beginPath(); ctx.arc(n.x, n.y, r + 6 * DPR, 0, 6.29);
-        ctx.fillStyle = (n.poisoned ? COL.badDim : COL.okDim) + (0.10 + n.glow * 0.25) + ")";
+        ctx.fillStyle = halo((0.10 + n.glow * 0.25) * pulse);
         ctx.fill();
-      }
-      // corpo
-      ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, 6.29);
-      ctx.fillStyle = !n.active ? COL.out : n.poisoned ? COL.bad : COL.ok;
-      ctx.globalAlpha = n.active ? 1 : 0.55;
-      ctx.fill(); ctx.globalAlpha = 1;
-      // anel de reputação
-      if (n.active) {
+        ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, 6.29);
+        ctx.fillStyle = color; ctx.fill();
         ctx.beginPath();
         ctx.arc(n.x, n.y, r + 3 * DPR, -Math.PI / 2, -Math.PI / 2 + (n.rep / 100) * 6.283);
-        ctx.strokeStyle = n.poisoned ? COL.bad : "rgba(232,238,246,0.35)";
-        ctx.lineWidth = 1.2 * DPR; ctx.stroke();
+        ctx.strokeStyle = n.poisoned ? C.bad : n.rep < 90 ? C.warn : "rgba(232,238,246,0.35)";
+        ctx.lineWidth = 1.3 * DPR; ctx.stroke();
       }
-      if (hoverN === i && n.active) {
-        ctx.beginPath(); ctx.arc(n.x, n.y, r + 5.5 * DPR, 0, 6.29);
+      if (hoverN === i) {
+        ctx.beginPath(); ctx.arc(n.x, n.y, base + 6.5 * DPR, 0, 6.29);
         ctx.strokeStyle = "#e8eef6"; ctx.lineWidth = 1 * DPR; ctx.stroke();
       }
     });
@@ -1413,12 +1518,11 @@ document.querySelectorAll("[data-tip]").forEach(el => {
   }
 
   build("malha");
-  addEventListener("resize", () => { const topo = S.topo; build(topo); });
-  if (REDUCED) {
-    draw(0);
-    setInterval(() => { doRound(); draw(0); }, ROUND_MS);
-  } else requestAnimationFrame(loop);
+  addEventListener("resize", () => build(S.topo));
+  if (REDUCED) { draw(0); setInterval(() => { doRound(); draw(0); }, ROUND_MS); }
+  else requestAnimationFrame(loop);
 })();
+
 </script>
 
 </body>
