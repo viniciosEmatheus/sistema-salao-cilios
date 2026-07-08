@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>cyber-data-lab — dossiê: da teoria à detecção</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="cyber-data-lab — dossiê interativo de EDA aplicada à segurança de redes: metodologia, resultados e um cérebro NEBULA simulado.">
+<meta name="description" content="cyber-data-lab — um radar de segurança que aprende o normal da sua rede e acusa o anormal: o que é, para quem, planos, resultados e conformidade.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛡️</text></svg>">
 </head>
 <body>
@@ -367,6 +367,24 @@
   .life h5 { font-family: var(--mono); font-size: 12.5px; margin: 0 0 8px; color: var(--ink); letter-spacing: .03em; }
   .life p { font-size: 12.8px; color: var(--ink-2); margin: 0; line-height: 1.55; }
 
+  .price { font-family: var(--mono); font-size: 12px; color: var(--accent); margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--grid); }
+  .comp { display: flex; flex-direction: column; gap: 10px; margin-top: 26px; }
+  .comp-row {
+    display: grid; grid-template-columns: 200px 1fr; gap: 6px 20px; align-items: start;
+    background: var(--surface); border: 1px solid var(--ring); border-radius: 10px;
+    padding: 16px 20px;
+  }
+  .comp-row h4 { font-size: 14.5px; margin: 0; }
+  .comp-row p { font-size: 13.5px; color: var(--ink-2); margin: 6px 0 0; grid-column: 2; }
+  .st {
+    justify-self: start; font-family: var(--mono); font-size: 11px; letter-spacing: .08em;
+    text-transform: uppercase; border-radius: 99px; padding: 4px 12px; white-space: nowrap;
+  }
+  .st.ok { color: var(--accent); background: var(--accent-wash); border: 1px solid var(--accent-dim); }
+  .st.prep { color: #e0a33e; background: rgba(224,163,62,.1); border: 1px solid rgba(224,163,62,.5); }
+  .st.plan { color: var(--muted); background: transparent; border: 1px solid var(--baseline); }
+  @media (max-width: 640px) { .comp-row { grid-template-columns: 1fr; } .comp-row p { grid-column: 1; } }
+
   /* ================= eventos NEBULA ================= */
   .ev-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
   .ev { background: var(--page); border: 1px solid var(--grid); border-radius: 8px; padding: 16px 18px; }
@@ -389,12 +407,12 @@
     <span class="id">CYBER-DATA-LAB</span>
     <span style="color:var(--muted)">dossiê v2</span>
     <div class="links">
-      <a href="#parte1">I·Contexto</a>
-      <a href="#parte2">II·Método</a>
-      <a href="#parte3">III·Resultados</a>
-      <a href="#parte4">IV·Instituições</a>
-      <a href="#parte5">V·Cérebro</a>
-      <a href="#refs">Referências</a>
+      <a href="#parte1">O que é</a>
+      <a href="#mercado">Para quem</a>
+      <a href="#planos">Planos</a>
+      <a href="#parte3">Resultados</a>
+      <a href="#conformidade">Conformidade</a>
+      <a href="#parte2">Tecnologia</a>
     </div>
   </div>
 </nav>
@@ -402,21 +420,20 @@
 <header class="hero">
   <canvas id="flowfield" aria-hidden="true"></canvas>
   <div class="wrap hero-inner">
-    <div class="eyebrow">Dossiê de investigação · EDA aplicada à segurança de redes</div>
-    <h1>Da teoria à detecção, <em>com a matemática exposta</em>.</h1>
+    <div class="eyebrow">cyber-data-lab · segurança de redes que aprende sozinha</div>
+    <h1>Um radar que aprende o <em>normal</em> da sua rede — e acusa o anormal.</h1>
     <p class="lead">
-      A literatura de cibersegurança afirma que ataques deixam assinaturas estatísticas
-      inconfundíveis. Este dossiê põe a afirmação à prova: constrói um laboratório de
-      20.000 fluxos de rede, implementa do zero cada instrumento matemático — entropia,
-      informação mútua, PCA, Mahalanobis — e mostra <b style="color:var(--ink)">o caminho
-      completo</b> até um detector que captura 90% das intrusões sem nunca ter visto um ataque.
+      Antivírus reconhecem ataques já catalogados. E o ataque novo, que ninguém catalogou?
+      O cyber-data-lab observa o comportamento da sua rede — quantas conexões, para onde,
+      com que volume — aprende o que é rotina e <b style="color:var(--ink)">dá o alarme
+      quando algo foge dela</b>. Em teste com 20.000 conexões, detectou 9 de cada 10
+      ataques que nunca tinha visto antes.
     </p>
     <div class="meta-chips">
-      <span>fluxos <b>20.000</b></span>
-      <span>ataques <b>18%</b></span>
-      <span>semente <b>42</b></span>
-      <span>testes <b>56 ✓</b></span>
-      <span>núcleo <b>from scratch</b></span>
+      <span>ataques detectados <b>9 em 10</b></span>
+      <span>alertas verdadeiros <b>8 em 10</b></span>
+      <span>seus dados <b>nunca saem da rede</b></span>
+      <span>código <b>aberto e verificado</b></span>
     </div>
   </div>
 </header>
@@ -426,14 +443,49 @@
 <!-- ============================================================ PARTE I -->
 <section id="parte1">
   <div class="part-head">
-    <div class="part-kicker">Parte I — Contexto</div>
-    <h2>Por que segurança de redes virou um problema de estatística</h2>
+    <div class="part-kicker">O que é · a finalidade</div>
+    <h2>Para que serve um sistema assim</h2>
     <p class="sub">
-      Firewalls e assinaturas conhecidas protegiam um perímetro que não existe mais. Com 5G,
-      IoT e computação de borda, a superfície de ataque explodiu — e a defesa migrou para um
-      paradigma <em>orientado por dados</em>, em que a pergunta deixa de ser “conheço este
-      ataque?” e passa a ser “este tráfego é estatisticamente plausível?” <span class="ref">[1, 2]</span>
+      A defesa tradicional funciona como uma lista de procurados: só barra quem já está
+      fichado. Este sistema fecha a brecha do ataque inédito — em vez de decorar ataques,
+      ele aprende a rotina da <em>sua</em> rede e sinaliza qualquer desvio, como um alarme
+      que conhece os hábitos da casa. <span class="ref">[1, 2]</span> Ele vigia quatro
+      comportamentos que antecedem ou constituem um ataque:
     </p>
+  </div>
+
+  <div class="front-grid">
+    <div class="front-card">
+      <span class="tag">reconhecimento</span>
+      <h4>Alguém testando suas portas</h4>
+      <p>Como um ladrão girando maçanetas de madrugada: o invasor varre centenas de
+      “portas” da rede procurando uma aberta. É quase sempre o primeiro passo de uma
+      invasão — e o sistema pega <b>100%</b> desses casos no teste.</p>
+    </div>
+    <div class="front-card">
+      <span class="tag">sobrecarga</span>
+      <h4>Multidão artificial na entrada</h4>
+      <p>O ataque de negação de serviço entope seu site ou sistema com tráfego falso até
+      ele cair — como lotar a porta de uma loja para ninguém entrar. Detecção de <b>100%</b>
+      no teste.</p>
+    </div>
+    <div class="front-card">
+      <span class="tag">vazamento</span>
+      <h4>Dados saindo pela porta dos fundos</h4>
+      <p>Informações da empresa sendo copiadas para fora em volume anormal, disfarçadas de
+      tráfego comum. O radar nota o fluxo atípico — <b>100%</b> de detecção no teste.</p>
+    </div>
+    <div class="front-card">
+      <span class="tag">infecção</span>
+      <h4>Máquinas “ligando para casa”</h4>
+      <p>Computadores infectados conversam com o criminoso usando endereços inventados por
+      algoritmo. É o caso mais furtivo — por isso o sistema tem uma segunda camada
+      específica para ele (veja os Resultados).</p>
+    </div>
+  </div>
+
+  <div class="part-head" style="margin-top:56px">
+    <div class="part-kicker">De onde vem a ciência</div>
   </div>
 
   <p style="color:var(--ink-2); max-width:70ch">
@@ -476,143 +528,105 @@
   </div>
 
   <p style="color:var(--ink-2); max-width:70ch; margin-top:26px">
-    Essa é a hipótese central que a <a href="#parte3">Parte III</a> verifica empiricamente.
-    Mas antes, o que separa este dossiê de um gráfico solto: <b style="color:var(--ink)">o caminho
-    até lá</b>, instrumento por instrumento.
+    Essa é a hipótese que a seção de <a href="#parte3">Resultados</a> confirma na prática — e a
+    seção de <a href="#parte2">Tecnologia</a> mostra o caminho completo até lá, passo a passo.
   </p>
 </section>
 
-<!-- ============================================================ PARTE II -->
-<section id="parte2">
+<!-- ============================================================ MERCADO -->
+<section id="mercado">
   <div class="part-head">
-    <div class="part-kicker">Parte II — Método</div>
-    <h2>Como chegamos lá: seis passos, cada um com sua matemática</h2>
+    <div class="part-kicker">Para quem · o mercado</div>
+    <h2>Quem precisa disso</h2>
     <p class="sub">
-      Nenhum resultado adiante é caixa-preta. Cada passo declara o que faz, por que faz
-      e a fórmula que o sustenta — implementada em Python puro sobre <code>numpy</code>,
-      com <code>scipy</code>/<code>sklearn</code> apenas onde reinventar seria vaidade.
+      Ataque não escolhe tamanho de empresa — mas equipe de segurança dedicada é privilégio
+      de poucas. O sistema foi pensado para quem precisa de vigilância profissional sem
+      montar um centro de operações próprio.
     </p>
   </div>
-
-  <div class="steps">
-
-    <div class="step">
-      <div class="node">1</div>
-      <h3>Construir o laboratório — tráfego sintético com física realista</h3>
-      <p class="why">
-        Capturas reais de rede são raras, sensíveis e não reprodutíveis. Em vez disso, um gerador
-        com semente fixa produz fluxos à la NetFlow cujas distribuições imitam a física do tráfego
-        real — volumes e durações <b>log-normais</b>, de cauda pesada — e injeta quatro famílias
-        de ataque, cada uma com a assinatura documentada na literatura: port scan (portas
-        espalhadas), DDoS (rajada em porta única), C2 por DGA (domínios de alta entropia,
-        beacons regulares) e exfiltração (fluxos longos com razão de saída alta).
-      </p>
-      <pre class="code"><span class="c"># reprodutível: mesma semente ⇒ mesmo dataset, sempre</span>
-df = generate_flows(FlowConfig(n_flows=<span class="k">20_000</span>, attack_ratio=<span class="k">0.18</span>, seed=<span class="k">42</span>))</pre>
-      <div class="step-result">resultado <b>20.000 fluxos</b> · 16.400 benignos + 3.600 em 4 famílias de ataque</div>
+  <div class="front-grid">
+    <div class="front-card">
+      <span class="tag">pequenas e médias empresas</span>
+      <h4>Quem não tem equipe de segurança</h4>
+      <p>Comércios, escritórios e indústrias que dependem da internet mas não têm analista
+      de segurança. Recebem o alarme automático e um relatório mensal em linguagem simples —
+      sem precisar entender de redes.</p>
     </div>
-
-    <div class="step">
-      <div class="node">2</div>
-      <h3>Caracterizar — momentos estatísticos e testes de hipótese</h3>
-      <p class="why">
-        Antes de qualquer modelo, a pergunta honesta: benigno e ataque são <em>de fato</em>
-        populações diferentes? A assimetria e a curtose (3º e 4º momentos padronizados,
-        implementados do zero) medem a forma das distribuições; os testes de Welch e
-        Mann-Whitney medem se as diferenças sobrevivem ao acaso.
-      </p>
-      <div class="formula">g₁ = m₃ / m₂^{3/2} &nbsp;&nbsp; g₂ = m₄ / m₂² − 3 &nbsp;&nbsp;<small>// assimetria e curtose em excesso</small></div>
-      <p class="why">
-        Os bytes de origem têm curtose <b>+199,6</b> — cauda pesadíssima, típica de tráfego real
-        (em escala log₁₀ ela cai para 0,5: quase normal). E o teste de Welch em
-        <code>packets</code> rejeita a hipótese de médias iguais com t = −43,6 e p ≈ 0.
-        As populações são separáveis; vale construir o resto.
-      </p>
-      <div class="step-result">resultado <b>p &lt; 10⁻³⁰</b> nos 3 atributos testados · curtose de src_bytes <b>199,6</b></div>
+    <div class="front-card">
+      <span class="tag">provedores de ti &amp; msps</span>
+      <h4>Quem cuida da rede dos outros</h4>
+      <p>Empresas de TI que atendem dezenas de clientes podem embutir o radar no próprio
+      serviço (marca branca) e oferecer monitoramento como diferencial — um painel por
+      cliente, gestão centralizada.</p>
     </div>
-
-    <div class="step">
-      <div class="node">3</div>
-      <h3>Medir desordem — a entropia de Shannon, do zero</h3>
-      <p class="why">
-        O instrumento central do dossiê. A entropia mede a incerteza de uma distribuição:
-        portas concentradas → bits baixos; portas espalhadas por um scan → bits altos.
-        A implementação são cinco linhas de numpy — sem biblioteca, sem mágica:
-      </p>
-      <div class="formula">H(X) = −Σₓ p(x) · log₂ p(x)</div>
-      <pre class="code">counts = np.fromiter(Counter(data).values(), dtype=<span class="k">float</span>)
-p = counts / counts.sum()
-H = <span class="k">float</span>(-np.sum(p * np.log2(p)))  <span class="c"># bits</span></pre>
-      <p class="why">
-        A mesma função, apontada para dimensões diferentes, caça ataques diferentes:
-        distribuição de <em>portas de destino</em> → port scan; distribuição de
-        <em>caracteres do domínio</em> → DGA.
-      </p>
-      <div class="step-result">instrumento validado por <b>16 testes</b> · H(moeda justa) = 1 bit ✓ · H(constante) = 0 ✓</div>
+    <div class="front-card">
+      <span class="tag">setores regulados</span>
+      <h4>Saúde, financeiro, jurídico</h4>
+      <p>Quem lida com dado sensível precisa <em>demonstrar</em> vigilância ativa em
+      auditorias e na LGPD. O sistema gera a evidência: registro contínuo do comportamento
+      da rede e de cada anomalia tratada.</p>
     </div>
-
-    <div class="step">
-      <div class="node">4</div>
-      <h3>Ranquear atributos — informação mútua com o rótulo</h3>
-      <p class="why">
-        Quais atributos “sabem” do ataque? A informação mútua responde com fundamento
-        teórico — quantos bits de incerteza sobre o rótulo desaparecem ao observar o atributo.
-        Derivada inteiramente das entropias do passo 3 (atributos contínuos são discretizados
-        em 20 quantis):
-      </p>
-      <div class="formula">I(X;Y) = H(X) + H(Y) − H(X,Y) &nbsp;&nbsp;<small>// ≥ 0, e = 0 sse independentes</small></div>
-      <p class="why">
-        É a mesma seleção de características que a literatura aponta como antídoto para a
-        “maldição da dimensionalidade” em IDS baseados em ML <span class="ref">[1, 4]</span>.
-      </p>
-      <div class="step-result">resultado <b>packets: 0,564 bits</b> lidera · bytes_ratio: 0,066 bits é quase ruído</div>
+    <div class="front-card">
+      <span class="tag">educação &amp; pesquisa</span>
+      <h4>Quem ensina e investiga</h4>
+      <p>Universidades e cursos técnicos usam o laboratório completo — código aberto, dados
+      simulados e experimentos repetíveis — para ensinar segurança de redes com a mão na massa.</p>
     </div>
+  </div>
+</section>
 
-    <div class="step">
-      <div class="node">5</div>
-      <h3>Projetar — PCA via decomposição em valores singulares</h3>
-      <p class="why">
-        Sete atributos são sete dimensões — invisíveis. O PCA encontra as direções de máxima
-        variância e projeta tudo em duas. Em vez de decompor a matriz de covariância
-        (numericamente instável), a implementação usa a SVD da matriz centrada e padronizada:
-      </p>
-      <div class="formula">X = U·S·Vᵀ &nbsp;⟹&nbsp; componentes = linhas de Vᵀ, &nbsp;λᵢ = sᵢ²/(n−1)</div>
-      <p class="why">
-        Os testes garantem as propriedades que a álgebra promete: componentes ortonormais,
-        variâncias iguais aos autovalores da covariância, reconstrução exata com posto completo.
-      </p>
-      <div class="step-result">resultado <b>PC1+PC2 = 58,7%</b> da variância · ilhas de ataque visíveis na Parte III</div>
+<!-- ============================================================ PLANOS -->
+<section id="planos">
+  <div class="part-head">
+    <div class="part-kicker">Como contratar · o modelo</div>
+    <h2>Três formas de levar o radar para a sua rede</h2>
+    <p class="sub">
+      Do check-up pontual à operação contínua — sempre começando por uma
+      <b style="color:var(--ink)">prova de valor gratuita de 14 dias</b> com o tráfego da
+      própria empresa: instalamos, observamos e apresentamos o que encontramos. Sem achado,
+      sem cobrança.
+    </p>
+  </div>
+  <div class="front-grid">
+    <div class="front-card">
+      <span class="tag">1 · diagnóstico</span>
+      <h4>Check-up da rede</h4>
+      <p>Uma avaliação única: analisamos um retrato do seu tráfego e entregamos um relatório
+      executivo — o que é rotina, o que destoa, onde estão os riscos e o que fazer primeiro.</p>
+      <p class="price">projeto fechado · entrega em até 2 semanas</p>
     </div>
-
-    <div class="step">
-      <div class="node">6</div>
-      <h3>Detectar — distância de Mahalanobis com limiar χ²</h3>
-      <p class="why">
-        O detector aprende <em>apenas o normal</em>: média μ e covariância Σ do tráfego benigno
-        (log-transformado, com regularização de Tikhonov para garantir a inversa). Cada fluxo é
-        então medido pela distância que respeita as correlações entre atributos:
-      </p>
-      <div class="formula">D²(x) = (x−μ)ᵀ Σ⁻¹ (x−μ) &nbsp;&nbsp;<small>// sob normalidade, D² ~ χ²₇ ⇒ limiar = quantil 99%</small></div>
-      <pre class="code">det = MahalanobisDetector(alpha=<span class="k">0.01</span>).fit(x_log[benignos])  <span class="c"># só benigno!</span>
-alerta = det.predict(x_log) == ANOMALY</pre>
-      <p class="why">
-        O limiar não é um número mágico: é o quantil 99% da distribuição qui-quadrado com 7
-        graus de liberdade — significância estatística, não tentativa e erro.
-      </p>
-      <div class="step-result">resultado <b>precisão 83,3% · recall 90,0% · F1 0,865</b> — detalhado na Parte III</div>
+    <div class="front-card">
+      <span class="tag">2 · monitoramento</span>
+      <h4>Vigilância contínua</h4>
+      <p>O radar ligado o tempo todo: alertas quando algo foge da rotina, painel de
+      acompanhamento como este site e revisão trimestral dos resultados com a sua equipe.</p>
+      <p class="price">assinatura mensal · por faixa de tamanho da rede</p>
     </div>
-
+    <div class="front-card">
+      <span class="tag">3 · parceiros</span>
+      <h4>Marca branca para provedores</h4>
+      <p>O motor de detecção embutido no serviço do parceiro, com a marca dele: integração
+      por API, painel multi-cliente e suporte técnico de segundo nível.</p>
+      <p class="price">licença por volume · receita compartilhada</p>
+    </div>
+  </div>
+  <div class="insight">
+    <b>Como vendemos, na prática:</b> prova de valor de 14 dias → relatório do que foi
+    encontrado na rede do cliente → proposta sob medida. Venda direta para empresas e
+    canal de parcerias com provedores de TI — que multiplicam o alcance sem multiplicar a equipe.
   </div>
 </section>
 
 <!-- ============================================================ PARTE III -->
 <section id="parte3">
   <div class="part-head">
-    <div class="part-kicker">Parte III — Resultados</div>
-    <h2>A hipótese da literatura, verificada nos dados</h2>
+    <div class="part-kicker">Resultados · está funcionando?</div>
+    <h2>Está funcionando? Os números de um teste com 20.000 conexões</h2>
     <p class="sub">
-      Todos os números abaixo saem do pipeline da Parte II, executado sobre o dataset com
-      semente 42 — reproduzíveis com um <code>python notebooks/eda.py</code>.
+      Nada aqui é promessa de folheto: todos os números saem de um experimento aberto e
+      repetível — 20.000 conexões de rede simuladas com realismo, 18% delas ataques de
+      quatro tipos. Qualquer pessoa pode rodar o mesmo teste e conferir cada número
+      (a seção Tecnologia mostra como).
     </p>
   </div>
 
@@ -624,7 +638,7 @@ alerta = det.predict(x_log) == ANOMALY</pre>
 
   <div class="card">
     <h3 class="block-title">Entropia de Shannon da porta de destino</h3>
-    <p class="block-sub">bits, por classe · passo 3 — a verificação da citação da Parte I</p>
+    <p class="block-sub">quanto maior a barra, mais espalhado o comportamento — a “impressão digital” do scan</p>
     <div class="chart" id="portChart"></div>
     <details>
       <summary>ver como tabela</summary>
@@ -692,16 +706,16 @@ alerta = det.predict(x_log) == ANOMALY</pre>
   </div>
 
   <div class="part-head" style="margin-top:56px">
-    <div class="part-kicker" style="color:var(--critical)">Parte III·b — O detector</div>
+    <div class="part-kicker" style="color:var(--critical)">Resultados · o alarme em ação</div>
     <h2 style="font-size:clamp(22px,3vw,30px)">Detecção sem rótulos: o veredito do χ²</h2>
     <p class="sub">Treinado exclusivamente no tráfego benigno (passo 6), o detector nunca viu um ataque. O que ele captura — e o que deixa passar — conta a história mais interessante do dossiê.</p>
   </div>
 
   <div class="tiles">
-    <div class="tile"><div class="val">83,3%</div><div class="lbl">precisão</div></div>
-    <div class="tile"><div class="val">90,0%</div><div class="lbl">recall</div></div>
-    <div class="tile"><div class="val">0,865</div><div class="lbl">F1</div></div>
-    <div class="tile crit"><div class="val">3.892</div><div class="lbl">fluxos sinalizados</div></div>
+    <div class="tile"><div class="val">8 em 10</div><div class="lbl">alertas eram ataques de verdade (precisão 83%)</div></div>
+    <div class="tile"><div class="val">9 em 10</div><div class="lbl">ataques foram detectados (recall 90%)</div></div>
+    <div class="tile"><div class="val">0,865</div><div class="lbl">nota geral do detector (F1)</div></div>
+    <div class="tile crit"><div class="val">3.892</div><div class="lbl">conexões sinalizadas para revisão</div></div>
   </div>
 
   <div class="card">
@@ -715,81 +729,23 @@ alerta = det.predict(x_log) == ANOMALY</pre>
     são anomalias <em>volumétricas</em>, visíveis na covariância. Mas o C2 por DGA escapa em
     metade dos casos (49%): seus beacons têm volume indistinguível do tráfego normal. Só a
     <b>entropia do domínio</b> o denuncia — a segunda linha de defesa que este dossiê constrói,
-    e o mesmo tipo de lacuna que motiva a pesquisa em explicabilidade (XAI) da Parte IV:
+    e o mesmo tipo de lacuna que motiva a pesquisa em explicabilidade (XAI) da seção de Pesquisa:
     saber <em>por que</em> um detector decide é saber onde ele é cego. <span class="ref">[1, 13]</span>
-  </div>
-</section>
-
-<!-- ============================================================ PARTE IV -->
-<section id="parte4">
-  <div class="part-head">
-    <div class="part-kicker">Parte IV — A dimensão institucional</div>
-    <h2>Quando o algoritmo vira capacidade de defesa</h2>
-    <p class="sub">
-      A matemática das Partes II–III não fica na academia. Sob a <b style="color:var(--ink)">Agência
-      Europeia de Defesa</b> e o Fundo Europeu de Defesa, laboratórios como o CyberDataLab entram em
-      consórcios com a Indra, a Airbus CyberSecurity e a Thales para converter detecção estatística em
-      <em>Consciência Situacional Cibernética</em> — prever, analisar e responder em ambientes
-      críticos e militares. <span class="ref">[2, 4, 5]</span>
-    </p>
-  </div>
-
-  <div class="front-grid">
-    <div class="front-card">
-      <span class="tag">consórcio · coordenação Indra</span>
-      <h4>ECYSAP EYE — suporte à decisão em ambiente hostil</h4>
-      <p>IA e big data mapeiam as operações e calculam a <em>resiliência da missão</em>: de que
-      forma uma intrusão técnica num nó da rede afeta os objetivos no mundo real. A contribuição
-      do laboratório é exatamente o tipo de modelo científico deste dossiê — só que em escala
-      continental.</p>
-      <p class="ref" style="margin-top:10px">[2, 6, 7]</p>
-    </div>
-    <div class="front-card">
-      <span class="tag">consórcio · guerra de informação</span>
-      <h4>EUCINF — a caixa de ferramentas cognitiva</h4>
-      <p>A consciência situacional moderna inclui o domínio cognitivo: inteligência de fontes
-      abertas (<b>OSINT</b>), da dark web (<b>DARKINT</b>) e de redes sociais (<b>SOCMINT</b>)
-      para detectar e combater campanhas de desinformação orquestradas por Estados hostis.</p>
-      <p class="ref" style="margin-top:10px">[2, 4]</p>
-    </div>
-  </div>
-
-  <div class="card">
-    <h3 class="block-title">As três camadas da guerra moderna, segundo o ECYSAP EYE</h3>
-    <p class="block-sub">passe o mouse (ou toque) em cada estrato · [2, 6]</p>
-    <div class="layers">
-      <div class="layer" tabindex="0">
-        <div class="l-name">③ Cognitiva / social</div>
-        <div class="l-desc">As redes humanas: engenharia social, narrativas adversariais e
-        operações de influência. O alvo do EUCINF — e o mais difícil de instrumentar.</div>
-      </div>
-      <div class="layer" tabindex="0">
-        <div class="l-name">② Lógica / virtual</div>
-        <div class="l-desc">Redes de dados e software — o território deste dossiê: fluxos,
-        entropias, detectores. Onde vivem as defesas informáticas clássicas.</div>
-      </div>
-      <div class="layer" tabindex="0">
-        <div class="l-name">① Eletromagnética / física</div>
-        <div class="l-desc">Infraestrutura mecânica, frequências de rádio militares e
-        aparelhos cinéticos. Uma intrusão lógica pode paralisá-la — é isso que a
-        engenharia de missão quantifica.</div>
-      </div>
-    </div>
   </div>
 </section>
 
 <!-- ============================================================ PARTE V -->
 <section id="parte5">
   <div class="part-head">
-    <div class="part-kicker">Parte V — A dimensão de engenharia</div>
+    <div class="part-kicker">Ao vivo · a tecnologia por dentro</div>
     <h2>O cérebro: uma federação que aprende, audita e se defende</h2>
     <p class="sub">
-      Monitorar nações inteiras gera tráfego colossal — e um orquestrador central é um ponto
-      único de falha. A plataforma <b style="color:var(--ink)">NEBULA</b> (CyberDataLab) responde
-      com <em>Arquitetura Orientada a Eventos</em> + <em>Aprendizagem Federada Descentralizada</em>:
-      os dados nunca saem dos dispositivos; só os pesos dos modelos viajam, como eventos
-      assíncronos, numa rede sem topologia fixa. <span class="ref">[2, 8, 12]</span>
-      Abaixo, uma simulação viva desse cérebro. <b style="color:var(--ink)">Interaja com ele</b>:
+      Mandar os dados de todo mundo para um servidor central cria um alvo único — se ele cai,
+      tudo cai. Nossa arquitetura, inspirada na plataforma NEBULA <span class="ref">[2, 8, 12]</span>,
+      faz o contrário: cada dispositivo <b style="color:var(--ink)">aprende localmente e
+      compartilha só o aprendizado, nunca os dados</b>. E se um participante for corrompido,
+      os próprios vizinhos percebem e o isolam. Abaixo, uma simulação viva desse cérebro —
+      <b style="color:var(--ink)">interaja com ele</b>:
     </p>
   </div>
 
@@ -887,7 +843,7 @@ alerta = det.predict(x_log) == ANOMALY</pre>
       <span class="tag">fronteira · explicabilidade</span>
       <h4>XAI e valores de Shapley temporais</h4>
       <p>O algoritmo ShaTS (CyberDataLab) explica <em>por que</em> um detector decide,
-      apontando sensores e instantes exatos — o antídoto para o ponto cego da Parte III.</p>
+      apontando sensores e instantes exatos — o antídoto para o ponto cego visto nos Resultados.</p>
       <p class="ref" style="margin-top:10px">[1, 13]</p>
     </div>
     <div class="front-card">
@@ -899,6 +855,246 @@ alerta = det.predict(x_log) == ANOMALY</pre>
     </div>
   </div>
 </section>
+
+<!-- ============================================================ CONFORMIDADE -->
+<section id="conformidade">
+  <div class="part-head">
+    <div class="part-kicker">Conformidade · certificações</div>
+    <h2>O que já cumprimos — e o que está na trilha</h2>
+    <p class="sub">
+      Transparência total: o sistema está em estágio de <b style="color:var(--ink)">protótipo
+      validado em ambiente de teste</b>. Abaixo, o que já é atendido pela própria forma como
+      ele foi construído — e o que está planejado no caminho para a operação comercial.
+      Nenhuma certificação formal foi emitida ainda; esta tabela é o nosso compromisso
+      público de rota.
+    </p>
+  </div>
+  <div class="comp">
+    <div class="comp-row">
+      <span class="st ok">atendido por construção</span>
+      <h4>LGPD — privacidade desde o projeto</h4>
+      <p>O radar analisa o <em>comportamento</em> do tráfego (volumes, destinos, horários),
+      não o conteúdo das mensagens. A demonstração pública usa dados 100% simulados, e a
+      arquitetura federada mantém os dados do cliente dentro da rede do cliente.</p>
+    </div>
+    <div class="comp-row">
+      <span class="st ok">atendido por construção</span>
+      <h4>Código aberto e auditável</h4>
+      <p>Todo o motor de detecção é público no GitHub. Qualquer auditor — do cliente ou de
+      um órgão regulador — pode inspecionar exatamente o que o sistema faz.</p>
+    </div>
+    <div class="comp-row">
+      <span class="st ok">atendido por construção</span>
+      <h4>Qualidade verificada automaticamente</h4>
+      <p>56 verificações automáticas rodam a cada alteração do código e garantem que a
+      matemática do detector continua fazendo exatamente o que promete.</p>
+    </div>
+    <div class="comp-row">
+      <span class="st prep">em preparação</span>
+      <h4>Validação com dados reais de intrusão</h4>
+      <p>Próxima etapa técnica: repetir todos os números deste site sobre o NSL-KDD, base
+      pública de referência internacional para detecção de intrusão, e publicar o comparativo.</p>
+    </div>
+    <div class="comp-row">
+      <span class="st plan">planejado</span>
+      <h4>ISO/IEC 27001 — gestão de segurança da informação</h4>
+      <p>Certificação do processo da empresa (não só do produto), exigida por clientes
+      corporativos maiores. Entra no roadmap junto com a operação comercial.</p>
+    </div>
+    <div class="comp-row">
+      <span class="st plan">planejado</span>
+      <h4>SOC 2 Tipo II — controles operacionais</h4>
+      <p>Auditoria independente de como operamos o serviço contínuo (disponibilidade,
+      confidencialidade, integridade). Requisito comum de setores regulados.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ PARTE II -->
+<section id="parte2">
+  <div class="part-head">
+    <div class="part-kicker">Tecnologia · para quem quer ver por dentro</div>
+    <h2>Como chegamos aos números: seis passos, cada um com sua matemática</h2>
+    <p class="sub">
+      Esta é a seção para perfis técnicos e auditores — pode pular sem perder o fio.
+      Nenhum resultado deste site é caixa-preta. Cada passo declara o que faz, por que faz
+      e a fórmula que o sustenta — implementada em Python puro sobre <code>numpy</code>,
+      com <code>scipy</code>/<code>sklearn</code> apenas onde reinventar seria vaidade.
+    </p>
+  </div>
+
+  <div class="steps">
+
+    <div class="step">
+      <div class="node">1</div>
+      <h3>Construir o laboratório — tráfego sintético com física realista</h3>
+      <p class="why">
+        Capturas reais de rede são raras, sensíveis e não reprodutíveis. Em vez disso, um gerador
+        com semente fixa produz fluxos à la NetFlow cujas distribuições imitam a física do tráfego
+        real — volumes e durações <b>log-normais</b>, de cauda pesada — e injeta quatro famílias
+        de ataque, cada uma com a assinatura documentada na literatura: port scan (portas
+        espalhadas), DDoS (rajada em porta única), C2 por DGA (domínios de alta entropia,
+        beacons regulares) e exfiltração (fluxos longos com razão de saída alta).
+      </p>
+      <pre class="code"><span class="c"># reprodutível: mesma semente ⇒ mesmo dataset, sempre</span>
+df = generate_flows(FlowConfig(n_flows=<span class="k">20_000</span>, attack_ratio=<span class="k">0.18</span>, seed=<span class="k">42</span>))</pre>
+      <div class="step-result">resultado <b>20.000 fluxos</b> · 16.400 benignos + 3.600 em 4 famílias de ataque</div>
+    </div>
+
+    <div class="step">
+      <div class="node">2</div>
+      <h3>Caracterizar — momentos estatísticos e testes de hipótese</h3>
+      <p class="why">
+        Antes de qualquer modelo, a pergunta honesta: benigno e ataque são <em>de fato</em>
+        populações diferentes? A assimetria e a curtose (3º e 4º momentos padronizados,
+        implementados do zero) medem a forma das distribuições; os testes de Welch e
+        Mann-Whitney medem se as diferenças sobrevivem ao acaso.
+      </p>
+      <div class="formula">g₁ = m₃ / m₂^{3/2} &nbsp;&nbsp; g₂ = m₄ / m₂² − 3 &nbsp;&nbsp;<small>// assimetria e curtose em excesso</small></div>
+      <p class="why">
+        Os bytes de origem têm curtose <b>+199,6</b> — cauda pesadíssima, típica de tráfego real
+        (em escala log₁₀ ela cai para 0,5: quase normal). E o teste de Welch em
+        <code>packets</code> rejeita a hipótese de médias iguais com t = −43,6 e p ≈ 0.
+        As populações são separáveis; vale construir o resto.
+      </p>
+      <div class="step-result">resultado <b>p &lt; 10⁻³⁰</b> nos 3 atributos testados · curtose de src_bytes <b>199,6</b></div>
+    </div>
+
+    <div class="step">
+      <div class="node">3</div>
+      <h3>Medir desordem — a entropia de Shannon, do zero</h3>
+      <p class="why">
+        O instrumento central do dossiê. A entropia mede a incerteza de uma distribuição:
+        portas concentradas → bits baixos; portas espalhadas por um scan → bits altos.
+        A implementação são cinco linhas de numpy — sem biblioteca, sem mágica:
+      </p>
+      <div class="formula">H(X) = −Σₓ p(x) · log₂ p(x)</div>
+      <pre class="code">counts = np.fromiter(Counter(data).values(), dtype=<span class="k">float</span>)
+p = counts / counts.sum()
+H = <span class="k">float</span>(-np.sum(p * np.log2(p)))  <span class="c"># bits</span></pre>
+      <p class="why">
+        A mesma função, apontada para dimensões diferentes, caça ataques diferentes:
+        distribuição de <em>portas de destino</em> → port scan; distribuição de
+        <em>caracteres do domínio</em> → DGA.
+      </p>
+      <div class="step-result">instrumento validado por <b>16 testes</b> · H(moeda justa) = 1 bit ✓ · H(constante) = 0 ✓</div>
+    </div>
+
+    <div class="step">
+      <div class="node">4</div>
+      <h3>Ranquear atributos — informação mútua com o rótulo</h3>
+      <p class="why">
+        Quais atributos “sabem” do ataque? A informação mútua responde com fundamento
+        teórico — quantos bits de incerteza sobre o rótulo desaparecem ao observar o atributo.
+        Derivada inteiramente das entropias do passo 3 (atributos contínuos são discretizados
+        em 20 quantis):
+      </p>
+      <div class="formula">I(X;Y) = H(X) + H(Y) − H(X,Y) &nbsp;&nbsp;<small>// ≥ 0, e = 0 sse independentes</small></div>
+      <p class="why">
+        É a mesma seleção de características que a literatura aponta como antídoto para a
+        “maldição da dimensionalidade” em IDS baseados em ML <span class="ref">[1, 4]</span>.
+      </p>
+      <div class="step-result">resultado <b>packets: 0,564 bits</b> lidera · bytes_ratio: 0,066 bits é quase ruído</div>
+    </div>
+
+    <div class="step">
+      <div class="node">5</div>
+      <h3>Projetar — PCA via decomposição em valores singulares</h3>
+      <p class="why">
+        Sete atributos são sete dimensões — invisíveis. O PCA encontra as direções de máxima
+        variância e projeta tudo em duas. Em vez de decompor a matriz de covariância
+        (numericamente instável), a implementação usa a SVD da matriz centrada e padronizada:
+      </p>
+      <div class="formula">X = U·S·Vᵀ &nbsp;⟹&nbsp; componentes = linhas de Vᵀ, &nbsp;λᵢ = sᵢ²/(n−1)</div>
+      <p class="why">
+        Os testes garantem as propriedades que a álgebra promete: componentes ortonormais,
+        variâncias iguais aos autovalores da covariância, reconstrução exata com posto completo.
+      </p>
+      <div class="step-result">resultado <b>PC1+PC2 = 58,7%</b> da variância · ilhas de ataque visíveis nos Resultados</div>
+    </div>
+
+    <div class="step">
+      <div class="node">6</div>
+      <h3>Detectar — distância de Mahalanobis com limiar χ²</h3>
+      <p class="why">
+        O detector aprende <em>apenas o normal</em>: média μ e covariância Σ do tráfego benigno
+        (log-transformado, com regularização de Tikhonov para garantir a inversa). Cada fluxo é
+        então medido pela distância que respeita as correlações entre atributos:
+      </p>
+      <div class="formula">D²(x) = (x−μ)ᵀ Σ⁻¹ (x−μ) &nbsp;&nbsp;<small>// sob normalidade, D² ~ χ²₇ ⇒ limiar = quantil 99%</small></div>
+      <pre class="code">det = MahalanobisDetector(alpha=<span class="k">0.01</span>).fit(x_log[benignos])  <span class="c"># só benigno!</span>
+alerta = det.predict(x_log) == ANOMALY</pre>
+      <p class="why">
+        O limiar não é um número mágico: é o quantil 99% da distribuição qui-quadrado com 7
+        graus de liberdade — significância estatística, não tentativa e erro.
+      </p>
+      <div class="step-result">resultado <b>precisão 83,3% · recall 90,0% · F1 0,865</b> — detalhado nos Resultados</div>
+    </div>
+
+  </div>
+</section>
+
+
+
+<!-- ============================================================ PARTE IV -->
+<section id="parte4">
+  <div class="part-head">
+    <div class="part-kicker">Pesquisa · a dimensão institucional</div>
+    <h2>Quando o algoritmo vira capacidade de defesa</h2>
+    <p class="sub">
+      A matemática deste sistema não fica na academia. Sob a <b style="color:var(--ink)">Agência
+      Europeia de Defesa</b> e o Fundo Europeu de Defesa, laboratórios como o CyberDataLab entram em
+      consórcios com a Indra, a Airbus CyberSecurity e a Thales para converter detecção estatística em
+      <em>Consciência Situacional Cibernética</em> — prever, analisar e responder em ambientes
+      críticos e militares. <span class="ref">[2, 4, 5]</span>
+    </p>
+  </div>
+
+  <div class="front-grid">
+    <div class="front-card">
+      <span class="tag">consórcio · coordenação Indra</span>
+      <h4>ECYSAP EYE — suporte à decisão em ambiente hostil</h4>
+      <p>IA e big data mapeiam as operações e calculam a <em>resiliência da missão</em>: de que
+      forma uma intrusão técnica num nó da rede afeta os objetivos no mundo real. A contribuição
+      do laboratório é exatamente o tipo de modelo científico deste dossiê — só que em escala
+      continental.</p>
+      <p class="ref" style="margin-top:10px">[2, 6, 7]</p>
+    </div>
+    <div class="front-card">
+      <span class="tag">consórcio · guerra de informação</span>
+      <h4>EUCINF — a caixa de ferramentas cognitiva</h4>
+      <p>A consciência situacional moderna inclui o domínio cognitivo: inteligência de fontes
+      abertas (<b>OSINT</b>), da dark web (<b>DARKINT</b>) e de redes sociais (<b>SOCMINT</b>)
+      para detectar e combater campanhas de desinformação orquestradas por Estados hostis.</p>
+      <p class="ref" style="margin-top:10px">[2, 4]</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 class="block-title">As três camadas da guerra moderna, segundo o ECYSAP EYE</h3>
+    <p class="block-sub">passe o mouse (ou toque) em cada estrato · [2, 6]</p>
+    <div class="layers">
+      <div class="layer" tabindex="0">
+        <div class="l-name">③ Cognitiva / social</div>
+        <div class="l-desc">As redes humanas: engenharia social, narrativas adversariais e
+        operações de influência. O alvo do EUCINF — e o mais difícil de instrumentar.</div>
+      </div>
+      <div class="layer" tabindex="0">
+        <div class="l-name">② Lógica / virtual</div>
+        <div class="l-desc">Redes de dados e software — o território deste dossiê: fluxos,
+        entropias, detectores. Onde vivem as defesas informáticas clássicas.</div>
+      </div>
+      <div class="layer" tabindex="0">
+        <div class="l-name">① Eletromagnética / física</div>
+        <div class="l-desc">Infraestrutura mecânica, frequências de rádio militares e
+        aparelhos cinéticos. Uma intrusão lógica pode paralisá-la — é isso que a
+        engenharia de missão quantifica.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
 
 <!-- ============================================================ referências -->
 <section id="refs">
