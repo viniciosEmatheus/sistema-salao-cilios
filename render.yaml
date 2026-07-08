@@ -1,0 +1,9 @@
+# Blueprint do Render: publica a pasta site/ como site estático.
+# No painel do Render: New → Blueprint → aponte para este repositório,
+# ou crie um Static Site manualmente com Publish Directory = site.
+services:
+  - type: web
+    name: cyber-data-lab
+    runtime: static
+    buildCommand: ""
+    staticPublishPath: site

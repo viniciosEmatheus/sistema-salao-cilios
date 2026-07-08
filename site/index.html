@@ -1,0 +1,1425 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>cyber-data-lab — dossiê: da teoria à detecção</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="cyber-data-lab — dossiê interativo de EDA aplicada à segurança de redes: metodologia, resultados e um cérebro NEBULA simulado.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛡️</text></svg>">
+</head>
+<body>
+<style>
+  /* ================= sala de situação — mundo visual único (dark deliberado) ================= */
+  :root, :root[data-theme="light"], :root[data-theme="dark"] {
+    --page: #0b111a;
+    --surface: #131a24;
+    --raised: #182230;
+    --ink: #e8eef6;
+    --ink-2: #9fb0c0;
+    --muted: #64768a;
+    --grid: #223044;
+    --baseline: #31435c;
+    --ring: rgba(232, 238, 246, 0.08);
+    --accent: #4cc9d4;
+    --accent-dim: #2a8f99;
+    --accent-wash: rgba(76, 201, 212, 0.08);
+    --critical: #e66767;
+    --critical-wash: rgba(230, 103, 103, 0.10);
+    --good: #0ca30c;
+    --s1: #3987e5; --s2: #199e70; --s3: #c98500; --s4: #008300; --s5: #9085e9;
+    --sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 64px; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    * { animation: none !important; transition: none !important; }
+  }
+  body {
+    margin: 0; background: var(--page); color: var(--ink);
+    font-family: var(--sans); font-size: 16.5px; line-height: 1.65;
+  }
+  ::selection { background: var(--accent-dim); color: #fff; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 24px; }
+  a { color: var(--accent); }
+
+  /* ================= barra do dossiê ================= */
+  nav.bar {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(11, 17, 26, 0.86);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--grid);
+  }
+  nav.bar .inner {
+    max-width: 980px; margin: 0 auto; padding: 12px 24px;
+    display: flex; align-items: center; gap: 18px;
+    font-family: var(--mono); font-size: 12px;
+  }
+  nav.bar .id { color: var(--accent); letter-spacing: .1em; }
+  nav.bar .links { margin-left: auto; display: flex; gap: 16px; flex-wrap: wrap; }
+  nav.bar a { color: var(--muted); text-decoration: none; letter-spacing: .06em; }
+  nav.bar a:hover { color: var(--ink); }
+
+  /* ================= hero ================= */
+  header.hero { position: relative; overflow: hidden; border-bottom: 1px solid var(--grid); }
+  #flowfield { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .5; }
+  .hero-inner { position: relative; padding: 96px 0 72px; }
+  .eyebrow {
+    font-family: var(--mono); font-size: 12.5px; letter-spacing: .22em;
+    text-transform: uppercase; color: var(--accent);
+  }
+  h1 {
+    font-size: clamp(38px, 6.2vw, 66px); font-weight: 780;
+    line-height: 1.03; letter-spacing: -0.028em;
+    margin: 20px 0 22px; text-wrap: balance; max-width: 15ch;
+  }
+  h1 em { font-style: normal; color: var(--accent); }
+  .lead { font-size: 18.5px; color: var(--ink-2); max-width: 60ch; margin: 0; }
+  .meta-chips { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 30px; }
+  .meta-chips span {
+    font-family: var(--mono); font-size: 12px; color: var(--ink-2);
+    border: 1px solid var(--baseline); border-radius: 4px;
+    padding: 5px 11px; background: rgba(19, 26, 36, 0.7);
+  }
+  .meta-chips b { color: var(--accent); font-weight: 500; }
+
+  /* ================= seções / partes ================= */
+  section { padding: 78px 0 10px; }
+  .part-head { margin-bottom: 34px; }
+  .part-kicker {
+    display: flex; align-items: center; gap: 14px;
+    font-family: var(--mono); font-size: 12.5px; letter-spacing: .2em;
+    text-transform: uppercase; color: var(--accent);
+  }
+  .part-kicker::after { content: ""; flex: 1; height: 1px; background: var(--grid); }
+  .part-head h2 {
+    font-size: clamp(26px, 3.6vw, 38px); font-weight: 740;
+    letter-spacing: -0.02em; margin: 14px 0 10px; text-wrap: balance;
+  }
+  .part-head .sub { color: var(--ink-2); max-width: 68ch; margin: 0; }
+  h3.block-title {
+    font-size: 15px; font-weight: 640; margin: 0 0 3px; color: var(--ink);
+  }
+  .block-sub { font-size: 12.5px; color: var(--muted); margin: 0 0 18px; font-family: var(--mono); }
+  p code, li code { font-family: var(--mono); font-size: .86em; background: var(--accent-wash); color: var(--accent); padding: 1px 6px; border-radius: 4px; }
+
+  .ref { font-family: var(--mono); font-size: .78em; color: var(--muted); }
+  /* citação da literatura */
+  .lit-quote {
+    margin: 30px 0 0; padding: 22px 26px;
+    background: var(--surface); border: 1px solid var(--ring);
+    border-left: 3px solid var(--accent); border-radius: 0 10px 10px 0;
+  }
+  .lit-quote p { margin: 0; font-size: 16.5px; color: var(--ink); font-style: italic; }
+  .lit-quote .src { font-family: var(--mono); font-size: 12px; color: var(--muted); margin-top: 12px; font-style: normal; }
+  .lit-quote .src a { color: var(--muted); }
+
+  /* trio EDA */
+  .eda-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin-top: 30px; }
+  .eda-card {
+    position: relative; background: var(--surface); border: 1px solid var(--ring);
+    border-radius: 10px; padding: 22px 22px 20px;
+  }
+  .eda-card .rn { font-family: var(--mono); font-size: 26px; color: var(--baseline); font-weight: 600; }
+  .eda-card h4 { font-size: 16px; margin: 10px 0 8px; letter-spacing: -0.01em; }
+  .eda-card p { font-size: 13.8px; color: var(--ink-2); margin: 0; line-height: 1.55; }
+  .eda-card.this { border-color: var(--accent-dim); }
+  .eda-card.this .rn { color: var(--accent); }
+  .badge {
+    position: absolute; top: 18px; right: 18px;
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--page);
+    background: var(--accent); border-radius: 3px; padding: 3px 8px; font-weight: 600;
+  }
+
+  /* ================= método: o stepper ================= */
+  .steps { margin-top: 8px; }
+  .step {
+    position: relative; padding: 0 0 44px 62px;
+  }
+  .step::before {  /* trilho */
+    content: ""; position: absolute; left: 19px; top: 44px; bottom: 0;
+    width: 1px; background: var(--grid);
+  }
+  .step:last-child::before { display: none; }
+  .step .node {
+    position: absolute; left: 0; top: 0;
+    width: 40px; height: 40px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 14px; font-weight: 600;
+    color: var(--accent); background: var(--surface);
+    border: 1px solid var(--accent-dim);
+  }
+  .step h3 { font-size: 19px; margin: 6px 0 10px; letter-spacing: -0.015em; }
+  .step .why { color: var(--ink-2); max-width: 66ch; margin: 0 0 14px; font-size: 15.5px; }
+  .formula {
+    font-family: var(--mono); font-size: 14.5px; color: var(--ink);
+    background: var(--surface); border: 1px solid var(--ring);
+    border-left: 3px solid var(--accent-dim);
+    border-radius: 0 8px 8px 0;
+    padding: 12px 18px; margin: 0 0 12px; overflow-x: auto; white-space: nowrap;
+  }
+  .formula small { color: var(--muted); }
+  pre.code {
+    font-family: var(--mono); font-size: 12.8px; line-height: 1.75;
+    background: #0e141d; border: 1px solid var(--grid); border-radius: 8px;
+    padding: 13px 16px; overflow-x: auto; margin: 0 0 12px; color: var(--ink-2);
+  }
+  pre.code .k { color: var(--accent); }
+  pre.code .c { color: var(--muted); }
+  .step-result {
+    display: inline-flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+    font-family: var(--mono); font-size: 13px;
+    background: var(--accent-wash); border: 1px solid var(--accent-dim);
+    border-radius: 6px; padding: 8px 14px; color: var(--ink-2);
+  }
+  .step-result b { color: var(--accent); font-size: 15px; font-weight: 600; }
+
+  /* ================= cartões / tiles / gráficos ================= */
+  .card {
+    background: var(--surface); border: 1px solid var(--ring);
+    border-radius: 12px; padding: 24px; margin-top: 18px;
+  }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-top: 18px; }
+  .tile {
+    background: var(--surface); border: 1px solid var(--ring); border-radius: 12px;
+    padding: 18px 20px 15px; position: relative; overflow: hidden;
+  }
+  .tile::after { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--accent-dim); }
+  .tile.crit::after { background: var(--critical); }
+  .tile .val { font-size: 32px; font-weight: 700; letter-spacing: -0.02em; }
+  .tile.crit .val { color: var(--critical); }
+  .tile .lbl { font-family: var(--mono); font-size: 11.5px; color: var(--muted); margin-top: 3px; letter-spacing: .05em; }
+
+  .chart { font-family: var(--sans); }
+  .bar-row { display: grid; grid-template-columns: 128px 1fr; gap: 12px; align-items: center; padding: 6px 0; }
+  .bar-row .name { font-family: var(--mono); font-size: 12.5px; color: var(--ink-2); text-align: right; }
+  .bar-track { position: relative; height: 22px; }
+  .bar-fill { position: absolute; inset: 0 auto 0 0; border-radius: 0 4px 4px 0; min-width: 2px; }
+  .bar-val { position: absolute; top: 50%; transform: translateY(-50%); font-size: 12.5px; font-variant-numeric: tabular-nums; color: var(--ink-2); white-space: nowrap; font-family: var(--mono); }
+  .axis-line { border-left: 1px solid var(--baseline); }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 4px 0 14px; font-size: 12.5px; color: var(--ink-2); font-family: var(--mono); }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+
+  .iv-row { display: grid; grid-template-columns: 128px 1fr; gap: 12px; align-items: center; padding: 8px 0; }
+  .iv-row .name { font-family: var(--mono); font-size: 12.5px; color: var(--ink-2); text-align: right; }
+  .iv-track { position: relative; height: 20px; }
+  .iv-band { position: absolute; top: 5px; bottom: 5px; border-radius: 5px; opacity: .3; }
+  .iv-dot { position: absolute; top: 50%; width: 11px; height: 11px; border-radius: 50%; transform: translate(-50%, -50%); border: 2px solid var(--surface); }
+  .iv-val { position: absolute; top: 50%; transform: translateY(-50%); font-size: 12.5px; color: var(--ink-2); font-variant-numeric: tabular-nums; white-space: nowrap; font-family: var(--mono); }
+  .scale-ticks { display: grid; grid-template-columns: 128px 1fr; gap: 12px; margin-top: 4px; }
+  .scale-ticks .t { position: relative; height: 18px; font-size: 11px; color: var(--muted); font-family: var(--mono); }
+  .scale-ticks .t span { position: absolute; transform: translateX(-50%); }
+
+  .scatter-box svg { width: 100%; height: auto; display: block; }
+  .tooltip {
+    position: fixed; z-index: 99; pointer-events: none;
+    background: var(--ink); color: var(--page);
+    font-size: 12.5px; padding: 6px 10px; border-radius: 6px;
+    opacity: 0; transition: opacity .12s; max-width: 280px; font-family: var(--sans);
+  }
+  .tooltip b { font-family: var(--mono); }
+
+  details { margin-top: 16px; }
+  details summary { cursor: pointer; font-size: 12.5px; color: var(--accent); font-family: var(--mono); }
+  details table { border-collapse: collapse; margin-top: 10px; font-size: 13px; width: 100%; max-width: 500px; }
+  details th, details td { text-align: left; padding: 6px 14px 6px 0; border-bottom: 1px solid var(--grid); }
+  details td:last-child, details th:last-child { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--mono); }
+  details th { color: var(--muted); font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; font-family: var(--mono); }
+
+  .insight {
+    border: 1px solid var(--accent-dim); background: var(--accent-wash);
+    border-radius: 10px; padding: 18px 22px; margin-top: 20px;
+    font-size: 15px; color: var(--ink-2);
+  }
+  .insight.crit { border-color: var(--critical); background: var(--critical-wash); }
+  .insight b { color: var(--ink); }
+  .insight .ref { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+
+  /* ================= demo ================= */
+  .demo { margin-top: 24px; background: var(--surface); border: 1px solid var(--accent-dim); border-radius: 12px; padding: 24px; }
+  .demo-label { font-family: var(--mono); font-size: 11.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+  .demo-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: stretch; }
+  .demo input {
+    flex: 1; min-width: 220px; font-family: var(--mono); font-size: 17px;
+    color: var(--ink); background: var(--page);
+    border: 1px solid var(--baseline); border-radius: 7px;
+    padding: 11px 14px; outline: none;
+  }
+  .demo input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-wash); }
+  .demo-h { font-family: var(--mono); min-width: 150px; display: flex; flex-direction: column; justify-content: center; padding: 4px 16px; border-radius: 7px; background: var(--accent-wash); border: 1px solid var(--accent-dim); }
+  .demo-h .v { font-size: 25px; font-weight: 600; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .demo-h .u { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+  .chips button {
+    font-family: var(--mono); font-size: 12.5px; cursor: pointer;
+    color: var(--ink-2); background: transparent;
+    border: 1px solid var(--baseline); border-radius: 99px; padding: 5px 12px;
+  }
+  .chips button:hover { border-color: var(--accent); color: var(--accent); }
+  .chips button:focus-visible, .demo input:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .strip { margin-top: 20px; }
+  .strip svg { width: 100%; height: auto; display: block; }
+  .verdict { margin-top: 14px; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; padding: 6px 13px; border-radius: 99px; border: 1px solid var(--ring); font-family: var(--mono); }
+  .verdict .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+  .verdict.ok { background: var(--accent-wash); border-color: var(--accent-dim); } .verdict.ok .dot { background: var(--accent); }
+  .verdict.bad { background: var(--critical-wash); border-color: var(--critical); } .verdict.bad .dot { background: var(--critical); }
+  .verdict.mid .dot { background: var(--muted); }
+  .demo-note { font-size: 13px; color: var(--muted); margin: 14px 0 0; }
+  .demo-note code { font-family: var(--mono); color: var(--ink-2); background: none; padding: 0; }
+
+  /* ================= fronteira ================= */
+  .front-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; margin-top: 26px; }
+  .front-card { background: var(--surface); border: 1px solid var(--ring); border-radius: 10px; padding: 22px; }
+  .front-card .tag { font-family: var(--mono); font-size: 11px; letter-spacing: .15em; text-transform: uppercase; color: var(--accent); }
+  .front-card h4 { font-size: 16.5px; margin: 10px 0 8px; }
+  .front-card p { font-size: 13.8px; color: var(--ink-2); margin: 0; line-height: 1.6; }
+  .front-card .ref { font-family: var(--mono); font-size: 11.5px; color: var(--muted); }
+
+  /* ================= referências / rodapé ================= */
+  ol.refs { margin: 26px 0 0; padding-left: 22px; color: var(--ink-2); font-size: 13.8px; }
+  ol.refs li { margin-bottom: 9px; }
+  ol.refs a { color: var(--ink-2); text-decoration-color: var(--baseline); word-break: break-all; }
+  ol.refs a:hover { color: var(--accent); }
+  footer { margin-top: 80px; padding: 34px 0 60px; border-top: 1px solid var(--grid); }
+  footer .cols { display: flex; gap: 34px; flex-wrap: wrap; justify-content: space-between; font-size: 14px; color: var(--ink-2); }
+  footer .mono { font-family: var(--mono); font-size: 12.5px; color: var(--muted); }
+  pre.run { font-family: var(--mono); font-size: 12.5px; line-height: 1.75; background: var(--surface); border: 1px solid var(--ring); border-radius: 8px; padding: 14px 16px; overflow-x: auto; color: var(--ink-2); margin: 12px 0 0; }
+  pre.run b { color: var(--accent); font-weight: 500; }
+
+  /* ================= camadas ECYSAP ================= */
+  .layers { display: flex; flex-direction: column; gap: 8px; }
+  .layer {
+    border: 1px solid var(--grid); border-radius: 8px;
+    padding: 14px 18px; background: var(--page);
+    transition: border-color .15s, background .15s; cursor: default;
+  }
+  .layer .l-name { font-family: var(--mono); font-size: 13.5px; color: var(--ink); letter-spacing: .04em; }
+  .layer .l-desc { font-size: 13.5px; color: var(--muted); margin-top: 6px; max-width: 72ch; transition: color .15s; }
+  .layer:hover, .layer:focus-visible { border-color: var(--accent-dim); background: var(--accent-wash); }
+  .layer:hover .l-desc, .layer:focus-visible .l-desc { color: var(--ink-2); }
+  .layer:nth-child(2):hover, .layer:nth-child(2):focus-visible { border-color: var(--accent); }
+
+  /* ================= cérebro NEBULA ================= */
+  .brain-panel {
+    background: radial-gradient(ellipse at 50% 0%, #16202e 0%, var(--surface) 55%);
+    border: 1px solid var(--accent-dim); border-radius: 14px;
+    padding: 20px; margin-top: 8px;
+  }
+  .brain-controls { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+  .seg { display: inline-flex; border: 1px solid var(--baseline); border-radius: 8px; overflow: hidden; }
+  .seg button {
+    font-family: var(--mono); font-size: 12.5px; padding: 7px 16px; cursor: pointer;
+    background: transparent; color: var(--muted); border: none;
+  }
+  .seg button + button { border-left: 1px solid var(--baseline); }
+  .seg button.on { background: var(--accent-wash); color: var(--accent); }
+  .btns { display: flex; gap: 8px; flex-wrap: wrap; }
+  .act {
+    font-family: var(--mono); font-size: 12.5px; padding: 7px 14px; cursor: pointer;
+    background: transparent; color: var(--ink-2);
+    border: 1px solid var(--baseline); border-radius: 8px;
+  }
+  .act:hover { border-color: var(--accent); color: var(--accent); }
+  .act.bad { border-color: rgba(230,103,103,.5); color: var(--critical); }
+  .act.bad:hover { border-color: var(--critical); background: var(--critical-wash); }
+  .act:focus-visible, .seg button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  #brain { display: block; width: 100%; height: 440px; margin-top: 14px; border-radius: 10px; cursor: pointer; touch-action: manipulation; }
+  .brain-hint { font-family: var(--mono); font-size: 11.5px; color: var(--muted); text-align: center; margin-top: 6px; letter-spacing: .04em; }
+  .brain-stats {
+    display: grid; grid-template-columns: repeat(4, auto) 1fr; gap: 10px 26px;
+    margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--grid);
+    align-items: end;
+  }
+  .bs .k { display: block; font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  .bs .v { font-family: var(--mono); font-size: 21px; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .bs.wide .v { color: var(--accent); }
+  .accbar { height: 5px; background: var(--grid); border-radius: 99px; margin-top: 6px; overflow: hidden; }
+  .accbar div { height: 100%; width: 0%; background: var(--accent); border-radius: 99px; transition: width .5s; }
+  .brain-log {
+    font-family: var(--mono); font-size: 12px; line-height: 1.9;
+    background: #0a0f16; border: 1px solid var(--grid); border-radius: 8px;
+    padding: 12px 16px; margin-top: 14px; min-height: 96px; max-height: 150px; overflow-y: auto;
+  }
+  .brain-log .le-node { color: var(--accent); }
+  .brain-log .le-msg { color: var(--s1); }
+  .brain-log .le-addon { color: var(--critical); }
+  .brain-log .le-t { color: var(--muted); }
+
+  /* ================= eventos NEBULA ================= */
+  .ev-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+  .ev { background: var(--page); border: 1px solid var(--grid); border-radius: 8px; padding: 16px 18px; }
+  .ev code { font-family: var(--mono); font-size: 13.5px; color: var(--accent); background: none; padding: 0; }
+  .ev p { font-size: 13px; color: var(--ink-2); margin: 8px 0 0; line-height: 1.55; }
+
+  @media (max-width: 720px) { .brain-stats { grid-template-columns: repeat(2, auto); } .bs.wide { grid-column: 1 / -1; } }
+  @media (max-width: 640px) {
+    .bar-row, .iv-row, .scale-ticks { grid-template-columns: 88px 1fr; }
+    .bar-row .name, .iv-row .name { font-size: 11px; }
+    .step { padding-left: 52px; }
+    .step .node { width: 34px; height: 34px; }
+    .step::before { left: 16px; }
+    nav.bar .links { display: none; }
+  }
+</style>
+
+<nav class="bar" aria-label="Navegação do dossiê">
+  <div class="inner">
+    <span class="id">CYBER-DATA-LAB</span>
+    <span style="color:var(--muted)">dossiê v2</span>
+    <div class="links">
+      <a href="#parte1">I·Contexto</a>
+      <a href="#parte2">II·Método</a>
+      <a href="#parte3">III·Resultados</a>
+      <a href="#parte4">IV·Instituições</a>
+      <a href="#parte5">V·Cérebro</a>
+      <a href="#refs">Referências</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <canvas id="flowfield" aria-hidden="true"></canvas>
+  <div class="wrap hero-inner">
+    <div class="eyebrow">Dossiê de investigação · EDA aplicada à segurança de redes</div>
+    <h1>Da teoria à detecção, <em>com a matemática exposta</em>.</h1>
+    <p class="lead">
+      A literatura de cibersegurança afirma que ataques deixam assinaturas estatísticas
+      inconfundíveis. Este dossiê põe a afirmação à prova: constrói um laboratório de
+      20.000 fluxos de rede, implementa do zero cada instrumento matemático — entropia,
+      informação mútua, PCA, Mahalanobis — e mostra <b style="color:var(--ink)">o caminho
+      completo</b> até um detector que captura 90% das intrusões sem nunca ter visto um ataque.
+    </p>
+    <div class="meta-chips">
+      <span>fluxos <b>20.000</b></span>
+      <span>ataques <b>18%</b></span>
+      <span>semente <b>42</b></span>
+      <span>testes <b>56 ✓</b></span>
+      <span>núcleo <b>from scratch</b></span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+<!-- ============================================================ PARTE I -->
+<section id="parte1">
+  <div class="part-head">
+    <div class="part-kicker">Parte I — Contexto</div>
+    <h2>Por que segurança de redes virou um problema de estatística</h2>
+    <p class="sub">
+      Firewalls e assinaturas conhecidas protegiam um perímetro que não existe mais. Com 5G,
+      IoT e computação de borda, a superfície de ataque explodiu — e a defesa migrou para um
+      paradigma <em>orientado por dados</em>, em que a pergunta deixa de ser “conheço este
+      ataque?” e passa a ser “este tráfego é estatisticamente plausível?” <span class="ref">[1, 2]</span>
+    </p>
+  </div>
+
+  <p style="color:var(--ink-2); max-width:70ch">
+    O pano de fundo desta investigação é o trabalho do <b style="color:var(--ink)">CyberDataLab</b>
+    (Universidade de Múrcia), laboratório europeu de referência que estrutura sua pesquisa em torno
+    de uma polissemia curiosa: o acrónimo <b style="color:var(--ink)">EDA</b> aparece três vezes,
+    com três significados que se complementam <span class="ref">[1, 2, 12]</span>:
+  </p>
+
+  <div class="eda-grid">
+    <div class="eda-card this">
+      <span class="badge">este projeto</span>
+      <div class="rn">I</div>
+      <h4>Análise Exploratória de Dados</h4>
+      <p>O alicerce estatístico: entropia, momentos, correlações e redução de dimensionalidade
+      que transformam petabytes de tráfego ilegível em assinaturas de ataque separáveis.
+      É a dimensão que este laboratório implementa e verifica, do zero.</p>
+    </div>
+    <div class="eda-card">
+      <div class="rn">II</div>
+      <h4>Agência Europeia de Defesa</h4>
+      <p>A dimensão institucional: consórcios como ECYSAP EYE e EUCINF (Indra, Airbus, Thales)
+      convertem esses algoritmos em consciência situacional cibernética para os
+      Estados-Membros da UE.</p>
+    </div>
+    <div class="eda-card">
+      <div class="rn">III</div>
+      <h4>Arquitetura Orientada a Eventos</h4>
+      <p>A dimensão de engenharia: plataformas como a NEBULA usam eventos assíncronos e
+      aprendizagem federada descentralizada para escalar a defesa sem pontos centrais de falha.</p>
+    </div>
+  </div>
+
+  <div class="lit-quote">
+    <p>“Ataques contínuos de varrimento de portas exibem assinaturas estatísticas
+    inconfundíveis. [...] a Entropia da Porta de Destino atua como uma característica isolada
+    crucial; não havendo sobreposição substancial entre o tráfego normal e anómalo nesta métrica,
+    apesar de o volume total de tráfego não ser marcadamente alterado pelo scan.”</p>
+    <div class="src">— Relatório “Pesquisa sobre o CyberDataLab” <a href="#refs">[1]</a>, ecoando a literatura de EDA para cibersegurança <a href="#refs">[4, 5]</a></div>
+  </div>
+
+  <p style="color:var(--ink-2); max-width:70ch; margin-top:26px">
+    Essa é a hipótese central que a <a href="#parte3">Parte III</a> verifica empiricamente.
+    Mas antes, o que separa este dossiê de um gráfico solto: <b style="color:var(--ink)">o caminho
+    até lá</b>, instrumento por instrumento.
+  </p>
+</section>
+
+<!-- ============================================================ PARTE II -->
+<section id="parte2">
+  <div class="part-head">
+    <div class="part-kicker">Parte II — Método</div>
+    <h2>Como chegamos lá: seis passos, cada um com sua matemática</h2>
+    <p class="sub">
+      Nenhum resultado adiante é caixa-preta. Cada passo declara o que faz, por que faz
+      e a fórmula que o sustenta — implementada em Python puro sobre <code>numpy</code>,
+      com <code>scipy</code>/<code>sklearn</code> apenas onde reinventar seria vaidade.
+    </p>
+  </div>
+
+  <div class="steps">
+
+    <div class="step">
+      <div class="node">1</div>
+      <h3>Construir o laboratório — tráfego sintético com física realista</h3>
+      <p class="why">
+        Capturas reais de rede são raras, sensíveis e não reprodutíveis. Em vez disso, um gerador
+        com semente fixa produz fluxos à la NetFlow cujas distribuições imitam a física do tráfego
+        real — volumes e durações <b>log-normais</b>, de cauda pesada — e injeta quatro famílias
+        de ataque, cada uma com a assinatura documentada na literatura: port scan (portas
+        espalhadas), DDoS (rajada em porta única), C2 por DGA (domínios de alta entropia,
+        beacons regulares) e exfiltração (fluxos longos com razão de saída alta).
+      </p>
+      <pre class="code"><span class="c"># reprodutível: mesma semente ⇒ mesmo dataset, sempre</span>
+df = generate_flows(FlowConfig(n_flows=<span class="k">20_000</span>, attack_ratio=<span class="k">0.18</span>, seed=<span class="k">42</span>))</pre>
+      <div class="step-result">resultado <b>20.000 fluxos</b> · 16.400 benignos + 3.600 em 4 famílias de ataque</div>
+    </div>
+
+    <div class="step">
+      <div class="node">2</div>
+      <h3>Caracterizar — momentos estatísticos e testes de hipótese</h3>
+      <p class="why">
+        Antes de qualquer modelo, a pergunta honesta: benigno e ataque são <em>de fato</em>
+        populações diferentes? A assimetria e a curtose (3º e 4º momentos padronizados,
+        implementados do zero) medem a forma das distribuições; os testes de Welch e
+        Mann-Whitney medem se as diferenças sobrevivem ao acaso.
+      </p>
+      <div class="formula">g₁ = m₃ / m₂^{3/2} &nbsp;&nbsp; g₂ = m₄ / m₂² − 3 &nbsp;&nbsp;<small>// assimetria e curtose em excesso</small></div>
+      <p class="why">
+        Os bytes de origem têm curtose <b>+199,6</b> — cauda pesadíssima, típica de tráfego real
+        (em escala log₁₀ ela cai para 0,5: quase normal). E o teste de Welch em
+        <code>packets</code> rejeita a hipótese de médias iguais com t = −43,6 e p ≈ 0.
+        As populações são separáveis; vale construir o resto.
+      </p>
+      <div class="step-result">resultado <b>p &lt; 10⁻³⁰</b> nos 3 atributos testados · curtose de src_bytes <b>199,6</b></div>
+    </div>
+
+    <div class="step">
+      <div class="node">3</div>
+      <h3>Medir desordem — a entropia de Shannon, do zero</h3>
+      <p class="why">
+        O instrumento central do dossiê. A entropia mede a incerteza de uma distribuição:
+        portas concentradas → bits baixos; portas espalhadas por um scan → bits altos.
+        A implementação são cinco linhas de numpy — sem biblioteca, sem mágica:
+      </p>
+      <div class="formula">H(X) = −Σₓ p(x) · log₂ p(x)</div>
+      <pre class="code">counts = np.fromiter(Counter(data).values(), dtype=<span class="k">float</span>)
+p = counts / counts.sum()
+H = <span class="k">float</span>(-np.sum(p * np.log2(p)))  <span class="c"># bits</span></pre>
+      <p class="why">
+        A mesma função, apontada para dimensões diferentes, caça ataques diferentes:
+        distribuição de <em>portas de destino</em> → port scan; distribuição de
+        <em>caracteres do domínio</em> → DGA.
+      </p>
+      <div class="step-result">instrumento validado por <b>16 testes</b> · H(moeda justa) = 1 bit ✓ · H(constante) = 0 ✓</div>
+    </div>
+
+    <div class="step">
+      <div class="node">4</div>
+      <h3>Ranquear atributos — informação mútua com o rótulo</h3>
+      <p class="why">
+        Quais atributos “sabem” do ataque? A informação mútua responde com fundamento
+        teórico — quantos bits de incerteza sobre o rótulo desaparecem ao observar o atributo.
+        Derivada inteiramente das entropias do passo 3 (atributos contínuos são discretizados
+        em 20 quantis):
+      </p>
+      <div class="formula">I(X;Y) = H(X) + H(Y) − H(X,Y) &nbsp;&nbsp;<small>// ≥ 0, e = 0 sse independentes</small></div>
+      <p class="why">
+        É a mesma seleção de características que a literatura aponta como antídoto para a
+        “maldição da dimensionalidade” em IDS baseados em ML <span class="ref">[1, 4]</span>.
+      </p>
+      <div class="step-result">resultado <b>packets: 0,564 bits</b> lidera · bytes_ratio: 0,066 bits é quase ruído</div>
+    </div>
+
+    <div class="step">
+      <div class="node">5</div>
+      <h3>Projetar — PCA via decomposição em valores singulares</h3>
+      <p class="why">
+        Sete atributos são sete dimensões — invisíveis. O PCA encontra as direções de máxima
+        variância e projeta tudo em duas. Em vez de decompor a matriz de covariância
+        (numericamente instável), a implementação usa a SVD da matriz centrada e padronizada:
+      </p>
+      <div class="formula">X = U·S·Vᵀ &nbsp;⟹&nbsp; componentes = linhas de Vᵀ, &nbsp;λᵢ = sᵢ²/(n−1)</div>
+      <p class="why">
+        Os testes garantem as propriedades que a álgebra promete: componentes ortonormais,
+        variâncias iguais aos autovalores da covariância, reconstrução exata com posto completo.
+      </p>
+      <div class="step-result">resultado <b>PC1+PC2 = 58,7%</b> da variância · ilhas de ataque visíveis na Parte III</div>
+    </div>
+
+    <div class="step">
+      <div class="node">6</div>
+      <h3>Detectar — distância de Mahalanobis com limiar χ²</h3>
+      <p class="why">
+        O detector aprende <em>apenas o normal</em>: média μ e covariância Σ do tráfego benigno
+        (log-transformado, com regularização de Tikhonov para garantir a inversa). Cada fluxo é
+        então medido pela distância que respeita as correlações entre atributos:
+      </p>
+      <div class="formula">D²(x) = (x−μ)ᵀ Σ⁻¹ (x−μ) &nbsp;&nbsp;<small>// sob normalidade, D² ~ χ²₇ ⇒ limiar = quantil 99%</small></div>
+      <pre class="code">det = MahalanobisDetector(alpha=<span class="k">0.01</span>).fit(x_log[benignos])  <span class="c"># só benigno!</span>
+alerta = det.predict(x_log) == ANOMALY</pre>
+      <p class="why">
+        O limiar não é um número mágico: é o quantil 99% da distribuição qui-quadrado com 7
+        graus de liberdade — significância estatística, não tentativa e erro.
+      </p>
+      <div class="step-result">resultado <b>precisão 83,3% · recall 90,0% · F1 0,865</b> — detalhado na Parte III</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============================================================ PARTE III -->
+<section id="parte3">
+  <div class="part-head">
+    <div class="part-kicker">Parte III — Resultados</div>
+    <h2>A hipótese da literatura, verificada nos dados</h2>
+    <p class="sub">
+      Todos os números abaixo saem do pipeline da Parte II, executado sobre o dataset com
+      semente 42 — reproduzíveis com um <code>python notebooks/eda.py</code>.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3 class="block-title">Composição do dataset</h3>
+    <p class="block-sub">fluxos por classe · passo 1</p>
+    <div class="chart" id="classChart"></div>
+  </div>
+
+  <div class="card">
+    <h3 class="block-title">Entropia de Shannon da porta de destino</h3>
+    <p class="block-sub">bits, por classe · passo 3 — a verificação da citação da Parte I</p>
+    <div class="chart" id="portChart"></div>
+    <details>
+      <summary>ver como tabela</summary>
+      <table><thead><tr><th>classe</th><th>H (bits)</th></tr></thead><tbody id="portTable"></tbody></table>
+    </details>
+  </div>
+
+  <div class="insight">
+    <b>A literatura previu; os dados confirmam.</b> O port scan atinge 10,4 bits contra 3,0 do
+    tráfego benigno — 3,5× mais, sem sobreposição entre as classes. Exatamente a “característica
+    isolada crucial” descrita no relatório. <span class="ref">[1, 5]</span> No extremo oposto, o
+    DDoS colapsa a 0 bits: todas as conexões numa única porta.
+  </div>
+
+  <div class="card">
+    <h3 class="block-title">Entropia de caracteres do domínio</h3>
+    <p class="block-sub">bits por caractere · ponto = média, faixa = Q1–Q3 · passo 3</p>
+    <div class="chart" id="domChart"></div>
+    <details>
+      <summary>ver como tabela</summary>
+      <table><thead><tr><th>classe</th><th>média</th><th>Q1–Q3</th></tr></thead><tbody id="domTable"></tbody></table>
+    </details>
+  </div>
+
+  <div class="demo">
+    <div class="demo-label">Experimente o instrumento — detector de DGA ao vivo</div>
+    <div class="demo-row">
+      <input id="dom" type="text" spellcheck="false" autocomplete="off"
+             value="kq3v9z7wx1p.com" aria-label="Digite um domínio para medir a entropia">
+      <div class="demo-h">
+        <span class="v" id="hval">—</span>
+        <span class="u">bits / caractere</span>
+      </div>
+    </div>
+    <div class="chips">
+      <button data-d="google.com">google.com</button>
+      <button data-d="wikipedia.org">wikipedia.org</button>
+      <button data-d="kq3v9z7wx1p.com">kq3v9z7wx1p.com</button>
+      <button data-d="x9f2qz1jw8kd0v.net">x9f2qz1jw8kd0v.net</button>
+    </div>
+    <div class="strip" id="strip"></div>
+    <div class="verdict mid" id="verdict"><span class="dot"></span><span id="vtext">digite um domínio…</span></div>
+    <p class="demo-note">
+      É a função do passo 3 rodando no seu navegador. As faixas são os percentis 5–95 do
+      dataset: benignos <code id="bandb"></code> · DGA <code id="bandd"></code>. Malwares geram
+      milhares de domínios de comando-e-controle por algoritmo — e a aleatoriedade cobra seu preço em bits.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3 class="block-title">Informação mútua com o rótulo is_attack</h3>
+    <p class="block-sub">bits · atributos discretizados em 20 quantis · passo 4</p>
+    <div class="chart" id="miChart"></div>
+    <details>
+      <summary>ver como tabela</summary>
+      <table><thead><tr><th>atributo</th><th>I (bits)</th></tr></thead><tbody id="miTable"></tbody></table>
+    </details>
+  </div>
+
+  <div class="card">
+    <h3 class="block-title">Projeção nos dois primeiros componentes principais</h3>
+    <p class="block-sub" id="pcaSub"></p>
+    <div class="legend" id="pcaLegend"></div>
+    <div class="scatter-box"><div id="scatter"></div></div>
+  </div>
+
+  <div class="part-head" style="margin-top:56px">
+    <div class="part-kicker" style="color:var(--critical)">Parte III·b — O detector</div>
+    <h2 style="font-size:clamp(22px,3vw,30px)">Detecção sem rótulos: o veredito do χ²</h2>
+    <p class="sub">Treinado exclusivamente no tráfego benigno (passo 6), o detector nunca viu um ataque. O que ele captura — e o que deixa passar — conta a história mais interessante do dossiê.</p>
+  </div>
+
+  <div class="tiles">
+    <div class="tile"><div class="val">83,3%</div><div class="lbl">precisão</div></div>
+    <div class="tile"><div class="val">90,0%</div><div class="lbl">recall</div></div>
+    <div class="tile"><div class="val">0,865</div><div class="lbl">F1</div></div>
+    <div class="tile crit"><div class="val">3.892</div><div class="lbl">fluxos sinalizados</div></div>
+  </div>
+
+  <div class="card">
+    <h3 class="block-title">Recall por família de ataque</h3>
+    <p class="block-sub">fração de cada família capturada pelo detector volumétrico</p>
+    <div class="chart" id="recallChart"></div>
+  </div>
+
+  <div class="insight crit">
+    <b>O ponto cego é a descoberta mais valiosa.</b> Scan, DDoS e exfiltração caem a 100% —
+    são anomalias <em>volumétricas</em>, visíveis na covariância. Mas o C2 por DGA escapa em
+    metade dos casos (49%): seus beacons têm volume indistinguível do tráfego normal. Só a
+    <b>entropia do domínio</b> o denuncia — a segunda linha de defesa que este dossiê constrói,
+    e o mesmo tipo de lacuna que motiva a pesquisa em explicabilidade (XAI) da Parte IV:
+    saber <em>por que</em> um detector decide é saber onde ele é cego. <span class="ref">[1, 13]</span>
+  </div>
+</section>
+
+<!-- ============================================================ PARTE IV -->
+<section id="parte4">
+  <div class="part-head">
+    <div class="part-kicker">Parte IV — A dimensão institucional</div>
+    <h2>Quando o algoritmo vira capacidade de defesa</h2>
+    <p class="sub">
+      A matemática das Partes II–III não fica na academia. Sob a <b style="color:var(--ink)">Agência
+      Europeia de Defesa</b> e o Fundo Europeu de Defesa, laboratórios como o CyberDataLab entram em
+      consórcios com a Indra, a Airbus CyberSecurity e a Thales para converter detecção estatística em
+      <em>Consciência Situacional Cibernética</em> — prever, analisar e responder em ambientes
+      críticos e militares. <span class="ref">[2, 4, 5]</span>
+    </p>
+  </div>
+
+  <div class="front-grid">
+    <div class="front-card">
+      <span class="tag">consórcio · coordenação Indra</span>
+      <h4>ECYSAP EYE — suporte à decisão em ambiente hostil</h4>
+      <p>IA e big data mapeiam as operações e calculam a <em>resiliência da missão</em>: de que
+      forma uma intrusão técnica num nó da rede afeta os objetivos no mundo real. A contribuição
+      do laboratório é exatamente o tipo de modelo científico deste dossiê — só que em escala
+      continental.</p>
+      <p class="ref" style="margin-top:10px">[2, 6, 7]</p>
+    </div>
+    <div class="front-card">
+      <span class="tag">consórcio · guerra de informação</span>
+      <h4>EUCINF — a caixa de ferramentas cognitiva</h4>
+      <p>A consciência situacional moderna inclui o domínio cognitivo: inteligência de fontes
+      abertas (<b>OSINT</b>), da dark web (<b>DARKINT</b>) e de redes sociais (<b>SOCMINT</b>)
+      para detectar e combater campanhas de desinformação orquestradas por Estados hostis.</p>
+      <p class="ref" style="margin-top:10px">[2, 4]</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 class="block-title">As três camadas da guerra moderna, segundo o ECYSAP EYE</h3>
+    <p class="block-sub">passe o mouse (ou toque) em cada estrato · [2, 6]</p>
+    <div class="layers">
+      <div class="layer" tabindex="0">
+        <div class="l-name">③ Cognitiva / social</div>
+        <div class="l-desc">As redes humanas: engenharia social, narrativas adversariais e
+        operações de influência. O alvo do EUCINF — e o mais difícil de instrumentar.</div>
+      </div>
+      <div class="layer" tabindex="0">
+        <div class="l-name">② Lógica / virtual</div>
+        <div class="l-desc">Redes de dados e software — o território deste dossiê: fluxos,
+        entropias, detectores. Onde vivem as defesas informáticas clássicas.</div>
+      </div>
+      <div class="layer" tabindex="0">
+        <div class="l-name">① Eletromagnética / física</div>
+        <div class="l-desc">Infraestrutura mecânica, frequências de rádio militares e
+        aparelhos cinéticos. Uma intrusão lógica pode paralisá-la — é isso que a
+        engenharia de missão quantifica.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ PARTE V -->
+<section id="parte5">
+  <div class="part-head">
+    <div class="part-kicker">Parte V — A dimensão de engenharia</div>
+    <h2>O cérebro: uma federação que aprende, audita e se defende</h2>
+    <p class="sub">
+      Monitorar nações inteiras gera tráfego colossal — e um orquestrador central é um ponto
+      único de falha. A plataforma <b style="color:var(--ink)">NEBULA</b> (CyberDataLab) responde
+      com <em>Arquitetura Orientada a Eventos</em> + <em>Aprendizagem Federada Descentralizada</em>:
+      os dados nunca saem dos dispositivos; só os pesos dos modelos viajam, como eventos
+      assíncronos, numa rede sem topologia fixa. <span class="ref">[2, 8, 12]</span>
+      Abaixo, uma simulação viva desse cérebro. <b style="color:var(--ink)">Interaja com ele</b>:
+    </p>
+  </div>
+
+  <div class="brain-panel">
+    <div class="brain-controls">
+      <div class="seg" role="group" aria-label="Topologia da federação">
+        <button data-topo="malha" class="on">malha</button><button data-topo="anel">anel</button><button data-topo="estrela">estrela</button>
+      </div>
+      <div class="btns">
+        <button id="btnPoison" class="act bad">⚡ envenenar nó</button>
+        <button id="btnCut" class="act">✂ cortar ligação</button>
+        <button id="btnReset" class="act">↻ reiniciar</button>
+      </div>
+    </div>
+    <canvas id="brain" aria-label="Simulação interativa de uma federação de nós de aprendizagem"></canvas>
+    <div class="brain-hint">clique num neurônio para envenená-lo · a federação audita a reputação e o expulsa sozinha</div>
+    <div class="brain-stats">
+      <div class="bs"><span class="k">rodada</span><span class="v" id="stRound">0</span></div>
+      <div class="bs"><span class="k">nós ativos</span><span class="v" id="stNodes">—</span></div>
+      <div class="bs"><span class="k">ligações</span><span class="v" id="stEdges">—</span></div>
+      <div class="bs"><span class="k">reputação média</span><span class="v" id="stRep">—</span></div>
+      <div class="bs wide">
+        <span class="k">acurácia do modelo global</span>
+        <span class="v" id="stAcc">—</span>
+        <div class="accbar"><div id="accFill"></div></div>
+      </div>
+    </div>
+    <div class="brain-log" id="brainLog" aria-live="polite"></div>
+  </div>
+
+  <div class="card" style="margin-top:22px">
+    <h3 class="block-title">O que você acabou de ver — o EventManager da NEBULA</h3>
+    <p class="block-sub">os três tipos de evento que regem a plataforma real · [2, 9, 10]</p>
+    <div class="ev-grid">
+      <div class="ev"><code>NodeEvent</code><p>Regula o início e o fim dos treinos matemáticos
+      nos nós locais — o brilho de cada neurônio a cada rodada.</p></div>
+      <div class="ev"><code>MessageEvent</code><p>A comunicação ponto a ponto: os pulsos que
+      viajam pelas ligações carregando só as atualizações de pesos, nunca os dados.</p></div>
+      <div class="ev"><code>AddonEvent</code><p>Perturbações táticas simuladas — atrasos,
+      perdas de sinal, ataques injetados. Os botões vermelhos acima.</p></div>
+    </div>
+    <p style="color:var(--ink-2); font-size:14.5px; margin:18px 0 0; max-width:70ch">
+      Se uma ligação cai, os nós sobreviventes continuam treinando sem colapsar; e mecanismos
+      de <b style="color:var(--ink)">reputação ponto a ponto</b> bloqueiam envenenamento de modelo
+      sem precisar de autoridade central <span class="ref">[2, 11, 12]</span> — exatamente o
+      comportamento que a simulação reproduz.
+    </p>
+  </div>
+
+  <div class="front-grid">
+    <div class="front-card">
+      <span class="tag">fronteira · explicabilidade</span>
+      <h4>XAI e valores de Shapley temporais</h4>
+      <p>O algoritmo ShaTS (CyberDataLab) explica <em>por que</em> um detector decide,
+      apontando sensores e instantes exatos — o antídoto para o ponto cego da Parte III.</p>
+      <p class="ref" style="margin-top:10px">[1, 13]</p>
+    </div>
+    <div class="front-card">
+      <span class="tag">fronteira · validação</span>
+      <h4>Cyber ranges e engenharia de caos</h4>
+      <p>Plataformas BAS com Security Chaos Engineering injetam ataques reais (MITRE Caldera)
+      em réplicas virtuais — o equivalente, em produção, dos 56 testes deste dossiê.</p>
+      <p class="ref" style="margin-top:10px">[1, 14]</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ referências -->
+<section id="refs">
+  <div class="part-head">
+    <div class="part-kicker">Referências</div>
+  </div>
+  <ol class="refs">
+    <li>“Relatório Exaustivo sobre as Interseções de Investigação no CyberDataLab: Segurança de Redes e a Tripla Dimensão do Acrónimo EDA” — documento de pesquisa que fundamenta este dossiê (2026).</li>
+    <li>“O Papel do CyberDataLab nas Dimensões Institucional e de Engenharia da Cibersegurança Europeia” — documento de pesquisa complementar que fundamenta as Partes IV e V (2026).</li>
+    <li>A Complete EDA and DL Pipeline for Softwarized 5G Network Intrusion Detection — <a href="https://www.mdpi.com/1999-5903/16/9/331">MDPI Future Internet</a>.</li>
+    <li>Exploratory Data Analysis for Cybersecurity — <a href="https://www.researchgate.net/publication/349407966_Exploratory_data_analysis_for_cybersecurity">ResearchGate</a>.</li>
+    <li>An Exploratory Data Analysis of the Network Behavior of Hive Home Devices — <a href="https://www.researchgate.net/publication/358558598_An_Exploratory_Data_Analysis_of_the_Network_Behavior_of_Hive_Home_Devices">ResearchGate</a>.</li>
+    <li>Toward a Military Smart Cyber Situational Awareness (CSA) — <a href="https://arxiv.org/pdf/2602.14116">arXiv</a>.</li>
+    <li>ECYSAP EYE — Full-Spectrum Cyber Situational Awareness — <a href="https://www.space.gr/_2/ECYSAP%20EYE">Space Hellas</a> · <a href="https://www.ecysap.eu/partners.html">parceiros</a>.</li>
+    <li>NEBULA: A Platform for Decentralized Federated Learning — <a href="https://nebula-dfl.com/">nebula-dfl.com</a> · <a href="https://github.com/CyberDataLab/nebula">GitHub</a>.</li>
+    <li>NEBULA Developer Guide (EventManager) — <a href="https://docs.nebula-dfl.com/developerguide/">docs.nebula-dfl.com</a>.</li>
+    <li>NEBULA Addons: env — <a href="https://docs.nebula-dfl.com/api/addons/env/">docs.nebula-dfl.com</a>.</li>
+    <li>NEBULA API: physical (reputação e confiabilidade) — <a href="https://docs.nebula-dfl.com/api/physical/">docs.nebula-dfl.com</a>.</li>
+    <li>CyberDataLab — <a href="https://cyberdatalab.um.es/">Universidad de Murcia</a> · <a href="https://github.com/CyberDataLab">GitHub</a>.</li>
+    <li>ShaTS: Shapley values for Time Series ML/DL Models — <a href="https://github.com/CyberDataLab/ShaTS">GitHub/CyberDataLab</a>.</li>
+    <li>Simulating Cyberattacks through a BAS Platform empowered by Security Chaos Engineering — <a href="https://arxiv.org/html/2508.03882v2">arXiv</a>.</li>
+  </ol>
+</section>
+
+<footer>
+  <div class="cols">
+    <div>
+      <div style="font-weight:650; color:var(--ink); margin-bottom:6px">cyber-data-lab</div>
+      Matemática implementada do zero: entropia, informação mútua,<br>
+      divergências KL/JS, PCA via SVD, distância de Mahalanobis.<br>
+      <span class="mono">python · numpy · scipy · 56 testes de propriedades matemáticas</span>
+    </div>
+    <div>
+      <div class="mono" style="text-transform:uppercase; letter-spacing:.1em; margin-bottom:6px">Reproduza cada número</div>
+      <pre class="run"><b>git clone</b> github.com/viniciosEmatheus/cyber-data-lab
+<b>pip install</b> -e ".[dev]" && <b>pytest</b>       <span style="color:var(--muted)"># 56 ✓</span>
+<b>python</b> notebooks/eda.py</pre>
+    </div>
+  </div>
+</footer>
+
+</div><!-- /wrap -->
+
+<div class="tooltip" id="tip"></div>
+
+<script>
+const DATA = {"classes":{"benign":16400,"port_scan":1381,"ddos":967,"dga_c2":709,"data_exfil":543},"attack_ratio":0.18,"n_flows":20000,"port_entropy":{"benign":2.999,"data_exfil":1.584,"ddos":0.0,"dga_c2":1.582,"port_scan":10.411},"domain_entropy":{"benign":{"mean":3.051,"q1":2.918,"q3":3.278},"port_scan":{"mean":3.054,"q1":2.922,"q3":3.322},"ddos":{"mean":3.053,"q1":2.922,"q3":3.278},"dga_c2":{"mean":3.937,"q1":3.784,"q3":4.096},"data_exfil":{"mean":3.496,"q1":3.022,"q3":3.96}},"demo_ref":{"benign":{"mean":3.051,"p05":2.646,"p95":3.459},"dga":{"mean":3.937,"p05":3.541,"p95":4.282}},"mutual_information":{"packets":0.5636,"src_bytes":0.3236,"duration":0.287,"dst_bytes":0.2782,"distinct_dst_ports":0.2131,"bytes_per_packet":0.1565,"bytes_ratio":0.0663},"pca_variance":[0.3284,0.2591,0.1498,0.1224,0.0941,0.0314,0.0149],"pca_points":[[-0.35,0.1,"benign"],[2.1,-1.34,"benign"],[-0.43,0.12,"benign"],[0.07,-0.08,"benign"],[0.25,-1.63,"benign"],[-0.09,0.18,"benign"],[-0.21,-0.44,"benign"],[-0.37,0.1,"benign"],[-0.34,0.09,"benign"],[-0.26,-0.17,"benign"],[-0.4,0.01,"benign"],[-0.37,-0.07,"benign"],[-0.11,0.25,"benign"],[0.01,-0.3,"benign"],[-0.16,-0.03,"benign"],[-0.29,0.24,"benign"],[-0.33,0.0,"benign"],[0.16,-0.44,"benign"],[-0.43,0.17,"benign"],[-0.32,0.05,"benign"],[0.77,-0.67,"benign"],[-0.4,0.09,"benign"],[-0.42,0.2,"benign"],[-0.33,-0.05,"benign"],[-0.3,0.2,"benign"],[-0.29,0.1,"benign"],[-0.31,0.24,"benign"],[0.49,-2.01,"benign"],[-0.39,0.14,"benign"],[-0.24,0.17,"benign"],[-0.1,-0.03,"benign"],[-0.03,0.25,"benign"],[-0.3,-0.01,"benign"],[-0.34,0.09,"benign"],[-0.44,0.07,"benign"],[-0.13,-0.1,"benign"],[-0.16,0.11,"benign"],[-0.11,0.31,"benign"],[-0.08,0.06,"benign"],[0.02,-0.85,"benign"],[-0.23,0.18,"benign"],[-0.23,0.12,"benign"],[-0.4,0.05,"benign"],[-0.16,-0.04,"benign"],[-0.39,0.01,"benign"],[-0.05,-0.01,"benign"],[-0.3,-0.08,"benign"],[-0.45,0.14,"benign"],[-0.38,-0.09,"benign"],[-0.04,0.21,"benign"],[-0.12,0.11,"benign"],[-0.37,0.14,"benign"],[-0.27,0.2,"benign"],[-0.21,0.09,"benign"],[0.41,-1.51,"benign"],[-0.39,0.14,"benign"],[-0.37,0.13,"benign"],[0.43,-0.54,"benign"],[0.16,-0.35,"benign"],[-0.2,0.18,"benign"],[-0.25,-0.42,"benign"],[-0.35,0.08,"benign"],[-0.38,-0.04,"benign"],[0.01,-0.83,"benign"],[-0.4,0.1,"benign"],[-0.18,0.03,"benign"],[-0.37,-0.03,"benign"],[-0.08,0.17,"benign"],[-0.17,0.27,"benign"],[-0.35,0.05,"benign"],[-0.45,0.16,"benign"],[0.23,0.44,"benign"],[0.16,-0.25,"benign"],[-0.05,0.09,"benign"],[0.12,-0.23,"benign"],[0.14,-0.22,"benign"],[-0.18,-0.14,"benign"],[-0.41,-0.04,"benign"],[-0.19,0.08,"benign"],[-0.33,0.15,"benign"],[-0.37,0.13,"benign"],[-0.35,0.17,"benign"],[-0.11,-0.15,"benign"],[-0.45,0.17,"benign"],[-0.44,0.16,"benign"],[0.08,0.21,"benign"],[-0.28,0.07,"benign"],[-0.37,-0.11,"benign"],[0.09,-0.39,"benign"],[-0.33,-0.02,"benign"],[0.55,0.36,"benign"],[-0.31,0.09,"benign"],[-0.44,0.14,"benign"],[0.28,-0.33,"benign"],[-0.4,0.2,"benign"],[-0.4,0.12,"benign"],[-0.27,0.09,"benign"],[-0.04,-1.03,"benign"],[-0.4,0.03,"benign"],[-0.18,0.27,"benign"],[-0.15,-0.21,"benign"],[-0.3,-0.25,"benign"],[2.19,-2.26,"benign"],[-0.16,0.22,"benign"],[-0.13,-0.05,"benign"],[-0.05,-0.12,"benign"],[-0.05,-0.91,"benign"],[0.18,-1.74,"benign"],[-0.32,-0.03,"benign"],[-0.45,0.16,"benign"],[-0.37,0.13,"benign"],[-0.17,0.27,"benign"],[-0.35,0.21,"benign"],[-0.3,0.01,"benign"],[2.45,-3.15,"benign"],[-0.38,0.18,"benign"],[-0.3,0.02,"benign"],[-0.29,0.07,"benign"],[-0.44,0.12,"benign"],[-0.24,-0.09,"benign"],[-0.29,-0.36,"benign"],[-0.43,0.14,"benign"],[0.16,-1.72,"benign"],[-0.36,0.2,"benign"],[0.26,-0.76,"benign"],[-0.35,-0.19,"benign"],[-0.11,-0.44,"benign"],[0.33,-0.91,"benign"],[-0.21,0.02,"benign"],[-0.41,0.04,"benign"],[-0.34,0.04,"benign"],[-0.42,0.07,"benign"],[-0.14,0.19,"benign"],[-0.37,0.14,"benign"],[-0.21,0.14,"benign"],[0.09,-0.29,"benign"],[-0.16,-0.25,"benign"],[-0.32,0.03,"benign"],[-0.34,-0.13,"benign"],[-0.11,-0.01,"benign"],[-0.35,0.05,"benign"],[-0.26,-0.25,"benign"],[-0.41,0.17,"benign"],[-0.34,0.18,"benign"],[-0.01,-0.84,"benign"],[-0.15,-0.15,"benign"],[-0.06,0.26,"benign"],[-0.36,0.05,"benign"],[-0.21,0.15,"benign"],[0.21,-1.33,"benign"],[-0.33,-0.0,"benign"],[-0.41,0.07,"benign"],[-0.35,-0.09,"benign"],[-0.39,0.11,"benign"],[0.2,0.12,"benign"],[-0.31,-0.06,"benign"],[-0.31,0.06,"benign"],[-0.29,0.15,"benign"],[0.01,0.07,"benign"],[-0.32,-0.0,"benign"],[-0.36,0.09,"benign"],[-0.31,-0.03,"benign"],[-0.2,0.18,"benign"],[-0.06,0.1,"benign"],[-0.27,-0.16,"benign"],[-0.29,0.18,"benign"],[0.03,0.2,"benign"],[-0.23,-0.05,"benign"],[0.78,-2.87,"benign"],[-0.22,0.09,"benign"],[1.38,0.8,"benign"],[-0.41,0.2,"benign"],[-0.08,0.24,"benign"],[0.23,-1.66,"benign"],[-0.3,0.19,"benign"],[-0.11,-0.28,"benign"],[-0.28,-0.06,"benign"],[-0.33,-0.02,"benign"],[-0.35,0.13,"benign"],[-0.27,0.21,"benign"],[-0.19,-0.04,"benign"],[-0.3,0.13,"benign"],[-0.26,-0.23,"benign"],[-0.22,0.23,"benign"],[-0.28,-0.24,"benign"],[0.03,-0.44,"benign"],[0.22,0.11,"benign"],[-0.17,-0.37,"benign"],[-0.38,0.2,"benign"],[-0.29,0.09,"benign"],[0.23,0.42,"benign"],[-0.35,0.17,"benign"],[-0.27,-0.04,"benign"],[-0.38,0.03,"benign"],[-0.14,0.27,"benign"],[-0.21,-0.3,"benign"],[-0.04,0.03,"benign"],[-0.2,-0.02,"benign"],[-0.25,0.05,"benign"],[-0.3,-0.02,"benign"],[-0.02,-0.36,"benign"],[-0.28,-0.33,"benign"],[-0.43,0.17,"benign"],[-0.01,0.19,"benign"],[-0.45,0.13,"benign"],[-0.41,0.13,"benign"],[-0.0,-0.24,"benign"],[0.15,0.41,"benign"],[-0.19,0.12,"benign"],[-0.09,-0.27,"benign"],[-0.45,0.17,"benign"],[-0.44,0.15,"benign"],[-0.14,0.07,"benign"],[0.41,-1.49,"benign"],[-0.43,0.17,"benign"],[-0.39,0.13,"benign"],[-0.42,0.1,"benign"],[-0.35,-0.03,"benign"],[-0.02,-0.92,"benign"],[-0.19,-0.1,"benign"],[-0.33,0.12,"benign"],[-0.36,0.2,"benign"],[-0.23,0.08,"benign"],[-0.38,0.15,"benign"],[-0.35,0.07,"benign"],[0.13,0.12,"benign"],[-0.28,0.24,"benign"],[0.01,-0.22,"benign"],[-0.07,-0.24,"benign"],[1.67,-5.85,"benign"],[0.33,-0.18,"benign"],[-0.14,-0.07,"benign"],[-0.11,0.15,"benign"],[-0.25,0.13,"benign"],[0.17,0.09,"benign"],[-0.31,0.01,"benign"],[-0.34,0.09,"benign"],[-0.37,0.01,"benign"],[-0.22,0.13,"benign"],[-0.29,-0.1,"benign"],[-0.29,0.07,"benign"],[-0.45,0.17,"benign"],[-0.21,0.2,"benign"],[-0.03,-0.14,"benign"],[-0.34,0.06,"benign"],[-0.31,0.17,"benign"],[-0.42,0.13,"benign"],[-0.23,0.12,"benign"],[0.39,-0.92,"benign"],[-0.35,0.14,"benign"],[-0.36,0.09,"benign"],[-0.31,0.01,"benign"],[-0.38,0.04,"benign"],[-0.19,0.08,"benign"],[-0.21,-0.1,"benign"],[-0.34,-0.18,"benign"],[-0.35,-0.02,"benign"],[-0.38,0.12,"benign"],[-0.38,-0.0,"benign"],[-0.24,-0.1,"benign"],[-0.24,0.01,"benign"],[-0.08,-0.27,"benign"],[-0.29,0.05,"benign"],[0.4,-0.62,"benign"],[-0.04,-0.69,"benign"],[-0.3,0.08,"benign"],[-0.21,-0.3,"benign"],[-0.17,-0.23,"benign"],[-0.41,0.13,"benign"],[-0.26,0.17,"benign"],[-0.25,-0.11,"benign"],[-0.38,0.02,"benign"],[-0.24,-0.15,"benign"],[-0.39,0.15,"benign"],[-0.35,0.15,"benign"],[-0.06,0.33,"benign"],[-0.27,-0.1,"benign"],[-0.4,0.17,"benign"],[-0.3,0.09,"benign"],[-0.42,0.17,"benign"],[-0.27,0.11,"benign"],[-0.27,0.02,"benign"],[-0.43,0.21,"benign"],[-0.43,0.19,"benign"],[-0.38,0.18,"benign"],[-0.39,0.17,"benign"],[-0.31,-0.05,"benign"],[-0.21,0.2,"benign"],[-0.23,-0.22,"benign"],[0.21,-0.57,"benign"],[-0.03,-0.12,"benign"],[0.19,0.27,"benign"],[-0.31,0.1,"benign"],[-0.39,0.11,"benign"],[-0.34,0.12,"benign"],[-0.36,-0.02,"benign"],[-0.31,0.1,"benign"],[0.3,-0.58,"benign"],[-0.38,0.2,"benign"],[-0.27,0.07,"benign"],[-0.36,0.02,"benign"],[-0.39,0.1,"benign"],[-0.13,-0.78,"benign"],[-0.35,0.16,"benign"],[-0.17,-0.07,"benign"],[-0.16,0.12,"benign"],[-0.35,0.11,"benign"],[-0.36,0.19,"benign"],[-0.44,0.05,"benign"],[-0.11,-0.03,"benign"],[-0.37,0.07,"benign"],[-0.33,0.19,"benign"],[-0.39,-0.04,"benign"],[0.61,-1.12,"benign"],[0.03,0.18,"benign"],[0.21,-0.36,"benign"],[-0.4,0.15,"benign"],[0.23,-0.44,"benign"],[-0.45,0.17,"benign"],[-0.35,0.08,"benign"],[-0.91,0.3,"port_scan"],[-0.84,0.22,"port_scan"],[-0.69,0.14,"port_scan"],[-1.03,0.31,"port_scan"],[-1.1,0.32,"port_scan"],[-0.99,0.33,"port_scan"],[-0.84,0.24,"port_scan"],[-0.71,0.21,"port_scan"],[-0.86,0.19,"port_scan"],[-0.69,0.21,"port_scan"],[-0.73,0.19,"port_scan"],[-1.07,0.31,"port_scan"],[-0.68,0.17,"port_scan"],[-1.0,0.31,"port_scan"],[-0.63,0.16,"port_scan"],[-0.65,0.14,"port_scan"],[-0.61,0.15,"port_scan"],[-0.89,0.28,"port_scan"],[-0.69,0.21,"port_scan"],[-0.65,0.18,"port_scan"],[-0.97,0.28,"port_scan"],[-1.06,0.33,"port_scan"],[-1.01,0.33,"port_scan"],[-1.06,0.36,"port_scan"],[-0.75,0.22,"port_scan"],[-0.86,0.24,"port_scan"],[-1.01,0.25,"port_scan"],[-1.04,0.32,"port_scan"],[-0.84,0.24,"port_scan"],[-0.74,0.19,"port_scan"],[-0.79,0.25,"port_scan"],[-0.93,0.3,"port_scan"],[-0.99,0.32,"port_scan"],[-0.8,0.24,"port_scan"],[-1.07,0.36,"port_scan"],[-0.82,0.25,"port_scan"],[-0.66,0.19,"port_scan"],[-1.04,0.28,"port_scan"],[-0.66,0.16,"port_scan"],[-0.86,0.26,"port_scan"],[-0.71,0.25,"port_scan"],[-0.8,0.24,"port_scan"],[-1.04,0.31,"port_scan"],[-0.82,0.26,"port_scan"],[-0.85,0.24,"port_scan"],[-0.8,0.26,"port_scan"],[-0.97,0.3,"port_scan"],[-1.06,0.35,"port_scan"],[-0.95,0.28,"port_scan"],[-0.7,0.17,"port_scan"],[-0.84,0.16,"port_scan"],[-0.91,0.26,"port_scan"],[-0.74,0.22,"port_scan"],[-0.72,0.2,"port_scan"],[-0.7,0.17,"port_scan"],[-0.73,0.22,"port_scan"],[-0.92,0.26,"port_scan"],[-1.01,0.24,"port_scan"],[-0.86,0.22,"port_scan"],[-0.69,0.17,"port_scan"],[-0.84,0.2,"port_scan"],[-0.93,0.29,"port_scan"],[-0.92,0.3,"port_scan"],[-1.0,0.33,"port_scan"],[-0.62,0.19,"port_scan"],[-0.92,0.3,"port_scan"],[-0.62,0.19,"port_scan"],[-0.79,0.25,"port_scan"],[-0.83,0.22,"port_scan"],[-0.92,0.3,"port_scan"],[-0.69,0.18,"port_scan"],[-0.62,0.17,"port_scan"],[-0.67,0.16,"port_scan"],[-0.7,0.18,"port_scan"],[-0.99,0.29,"port_scan"],[-0.82,0.18,"port_scan"],[-0.75,0.17,"port_scan"],[-1.1,0.36,"port_scan"],[-0.57,0.07,"port_scan"],[-0.99,0.29,"port_scan"],[-0.67,0.19,"port_scan"],[-0.7,0.21,"port_scan"],[-0.97,0.3,"port_scan"],[-0.74,0.17,"port_scan"],[-0.69,0.16,"port_scan"],[-0.68,0.2,"port_scan"],[-0.64,0.12,"port_scan"],[-1.03,0.32,"port_scan"],[-0.85,0.25,"port_scan"],[-1.01,0.32,"port_scan"],[-0.72,0.16,"port_scan"],[-0.84,0.24,"port_scan"],[-0.9,0.28,"port_scan"],[-0.58,0.08,"port_scan"],[-0.89,0.22,"port_scan"],[-1.12,0.36,"port_scan"],[-0.9,0.27,"port_scan"],[-0.97,0.31,"port_scan"],[-0.76,0.23,"port_scan"],[-1.04,0.32,"port_scan"],[-0.69,0.2,"port_scan"],[-0.67,0.19,"port_scan"],[-1.11,0.34,"port_scan"],[-0.88,0.26,"port_scan"],[-0.98,0.24,"port_scan"],[-0.78,0.22,"port_scan"],[-1.11,0.33,"port_scan"],[-1.09,0.34,"port_scan"],[-0.87,0.26,"port_scan"],[-0.95,0.32,"port_scan"],[-0.86,0.27,"port_scan"],[-0.68,0.2,"port_scan"],[-1.03,0.34,"port_scan"],[-0.61,0.17,"port_scan"],[-0.77,0.13,"port_scan"],[-0.93,0.29,"port_scan"],[-0.99,0.31,"port_scan"],[-0.81,0.21,"port_scan"],[-0.63,0.18,"port_scan"],[-1.06,0.34,"port_scan"],[-0.81,0.24,"port_scan"],[-1.03,0.32,"port_scan"],[-0.87,0.26,"port_scan"],[-0.59,0.15,"port_scan"],[-1.07,0.34,"port_scan"],[-0.7,0.21,"port_scan"],[-0.64,0.18,"port_scan"],[-0.75,0.22,"port_scan"],[-0.69,0.11,"port_scan"],[-0.95,0.28,"port_scan"],[-0.81,0.26,"port_scan"],[-0.86,0.24,"port_scan"],[-0.68,0.21,"port_scan"],[-0.88,0.27,"port_scan"],[-0.84,0.27,"port_scan"],[-0.72,0.12,"port_scan"],[-1.08,0.36,"port_scan"],[-1.11,0.35,"port_scan"],[-0.9,0.26,"port_scan"],[-0.74,0.22,"port_scan"],[-0.82,0.2,"port_scan"],[-0.97,0.23,"port_scan"],[-1.06,0.31,"port_scan"],[-0.61,0.18,"port_scan"],[-0.67,0.19,"port_scan"],[-0.6,0.06,"port_scan"],[-1.05,0.26,"port_scan"],[-1.03,0.31,"port_scan"],[-1.07,0.32,"port_scan"],[-0.62,0.18,"port_scan"],[-1.02,0.22,"port_scan"],[-0.71,0.19,"port_scan"],[-0.67,0.21,"port_scan"],[-0.73,0.23,"port_scan"],[-0.62,0.16,"port_scan"],[-1.01,0.29,"port_scan"],[-0.91,0.3,"port_scan"],[-0.73,0.22,"port_scan"],[-0.76,0.2,"port_scan"],[-0.85,0.24,"port_scan"],[-1.03,0.33,"port_scan"],[-0.6,0.09,"port_scan"],[-0.77,0.22,"port_scan"],[-0.63,0.21,"port_scan"],[-0.68,0.2,"port_scan"],[-0.59,0.12,"port_scan"],[-0.72,0.21,"port_scan"],[-0.95,0.27,"port_scan"],[-0.93,0.26,"port_scan"],[-0.63,0.17,"port_scan"],[-0.95,0.25,"port_scan"],[-0.84,0.23,"port_scan"],[-0.73,0.15,"port_scan"],[-0.92,0.28,"port_scan"],[-0.97,0.3,"port_scan"],[-0.87,0.26,"port_scan"],[-0.71,0.22,"port_scan"],[-0.79,0.24,"port_scan"],[-0.73,0.2,"port_scan"],[-1.11,0.35,"port_scan"],[-0.95,0.27,"port_scan"],[-1.1,0.36,"port_scan"],[-0.84,0.27,"port_scan"],[-0.67,0.2,"port_scan"],[-1.04,0.3,"port_scan"],[-0.94,0.31,"port_scan"],[-1.11,0.36,"port_scan"],[-0.89,0.28,"port_scan"],[-0.67,0.17,"port_scan"],[-0.73,0.16,"port_scan"],[-1.03,0.31,"port_scan"],[-1.06,0.33,"port_scan"],[-0.68,0.2,"port_scan"],[-0.91,0.19,"port_scan"],[-1.1,0.38,"port_scan"],[-0.96,0.32,"port_scan"],[-0.81,0.21,"port_scan"],[-0.97,0.24,"port_scan"],[-0.68,0.22,"port_scan"],[-0.9,0.27,"port_scan"],[-0.72,0.24,"port_scan"],[-0.63,0.19,"port_scan"],[-0.81,0.25,"port_scan"],[-0.79,0.24,"port_scan"],[-1.05,0.33,"port_scan"],[-1.05,0.31,"port_scan"],[-0.66,0.19,"port_scan"],[-1.08,0.31,"port_scan"],[-0.79,0.24,"port_scan"],[-1.05,0.34,"port_scan"],[-0.64,0.15,"port_scan"],[-1.01,0.31,"port_scan"],[-0.72,0.26,"port_scan"],[-0.89,0.25,"port_scan"],[-1.11,0.36,"port_scan"],[-0.89,0.28,"port_scan"],[-1.04,0.31,"port_scan"],[-0.73,0.2,"port_scan"],[-0.92,0.26,"port_scan"],[-0.96,0.2,"port_scan"],[-0.98,0.3,"port_scan"],[-0.59,0.08,"port_scan"],[-0.97,0.3,"port_scan"],[-0.9,0.23,"port_scan"],[-1.0,0.33,"port_scan"],[-0.57,0.1,"port_scan"],[-0.69,0.15,"port_scan"],[-0.94,0.28,"port_scan"],[-0.9,0.19,"port_scan"],[-0.79,0.24,"port_scan"],[-1.02,0.32,"port_scan"],[-0.93,0.28,"port_scan"],[-0.64,0.17,"port_scan"],[-0.72,0.1,"port_scan"],[-0.85,0.25,"port_scan"],[-0.65,0.18,"port_scan"],[-1.07,0.33,"port_scan"],[-1.11,0.36,"port_scan"],[-0.75,0.23,"port_scan"],[-0.94,0.28,"port_scan"],[-0.68,0.13,"port_scan"],[-0.82,0.24,"port_scan"],[-0.76,0.2,"port_scan"],[-0.95,0.31,"port_scan"],[-0.89,0.22,"port_scan"],[-0.87,0.26,"port_scan"],[-0.67,0.17,"port_scan"],[-0.58,0.11,"port_scan"],[-1.06,0.35,"port_scan"],[-0.63,0.14,"port_scan"],[-0.69,0.19,"port_scan"],[-1.02,0.27,"port_scan"],[-0.68,0.21,"port_scan"],[-1.05,0.29,"port_scan"],[-1.12,0.37,"port_scan"],[-0.97,0.29,"port_scan"],[-0.76,0.25,"port_scan"],[-0.94,0.29,"port_scan"],[-1.12,0.37,"port_scan"],[-0.63,0.19,"port_scan"],[-0.86,0.25,"port_scan"],[-0.97,0.28,"port_scan"],[-0.85,0.24,"port_scan"],[-0.68,0.22,"port_scan"],[-0.81,0.24,"port_scan"],[-0.94,0.3,"port_scan"],[-0.85,0.18,"port_scan"],[-1.02,0.31,"port_scan"],[-0.66,0.13,"port_scan"],[-1.03,0.22,"port_scan"],[-0.72,0.2,"port_scan"],[-0.72,0.21,"port_scan"],[-1.08,0.27,"port_scan"],[-0.79,0.23,"port_scan"],[-0.7,0.14,"port_scan"],[-0.75,0.23,"port_scan"],[-0.87,0.29,"port_scan"],[-1.09,0.33,"port_scan"],[-0.72,0.22,"port_scan"],[-0.76,0.19,"port_scan"],[-0.74,0.26,"port_scan"],[-0.95,0.21,"port_scan"],[-0.92,0.24,"port_scan"],[-0.78,0.21,"port_scan"],[-0.93,0.27,"port_scan"],[-0.94,0.27,"port_scan"],[-0.61,0.11,"port_scan"],[-0.75,0.21,"port_scan"],[-1.03,0.36,"port_scan"],[-0.97,0.3,"port_scan"],[-1.01,0.31,"port_scan"],[-0.83,0.24,"port_scan"],[-0.98,0.2,"port_scan"],[-0.81,0.2,"port_scan"],[-0.64,0.19,"port_scan"],[-0.82,0.26,"port_scan"],[-1.08,0.25,"port_scan"],[-1.09,0.34,"port_scan"],[-0.94,0.3,"port_scan"],[-0.77,0.23,"port_scan"],[-0.6,0.14,"port_scan"],[-0.78,0.2,"port_scan"],[-0.75,0.18,"port_scan"],[-0.78,0.23,"port_scan"],[-0.9,0.27,"port_scan"],[-0.68,0.2,"port_scan"],[-0.9,0.26,"port_scan"],[-0.62,0.16,"port_scan"],[-0.6,0.13,"port_scan"],[-0.84,0.25,"port_scan"],[-0.63,0.13,"port_scan"],[-0.89,0.3,"port_scan"],[-1.07,0.32,"port_scan"],[-0.9,0.29,"port_scan"],[-0.6,0.18,"port_scan"],[-0.72,0.19,"port_scan"],[-0.61,0.14,"port_scan"],[-1.0,0.31,"port_scan"],[-0.68,0.2,"port_scan"],[-0.63,0.17,"port_scan"],[0.49,1.0,"ddos"],[0.46,0.98,"ddos"],[0.57,1.06,"ddos"],[0.42,0.94,"ddos"],[0.46,0.98,"ddos"],[0.46,0.98,"ddos"],[0.44,0.97,"ddos"],[0.51,1.01,"ddos"],[0.47,0.99,"ddos"],[0.46,0.98,"ddos"],[0.52,1.03,"ddos"],[0.51,1.01,"ddos"],[0.5,1.01,"ddos"],[0.55,1.05,"ddos"],[0.53,1.04,"ddos"],[0.46,0.98,"ddos"],[0.48,1.0,"ddos"],[0.46,0.98,"ddos"],[0.48,1.0,"ddos"],[0.44,0.96,"ddos"],[0.47,0.99,"ddos"],[0.52,1.02,"ddos"],[0.52,1.03,"ddos"],[0.47,0.99,"ddos"],[0.55,1.05,"ddos"],[0.55,1.05,"ddos"],[0.47,0.98,"ddos"],[0.51,1.01,"ddos"],[0.54,1.04,"ddos"],[0.47,0.99,"ddos"],[0.45,0.97,"ddos"],[0.57,1.07,"ddos"],[0.4,0.93,"ddos"],[0.47,0.99,"ddos"],[0.45,0.97,"ddos"],[0.44,0.95,"ddos"],[0.5,1.01,"ddos"],[0.43,0.95,"ddos"],[0.51,1.02,"ddos"],[0.52,1.03,"ddos"],[0.47,0.99,"ddos"],[0.48,0.99,"ddos"],[0.41,0.93,"ddos"],[0.47,0.99,"ddos"],[0.45,0.97,"ddos"],[0.52,1.02,"ddos"],[0.46,0.97,"ddos"],[0.44,0.96,"ddos"],[0.49,1.0,"ddos"],[0.54,1.04,"ddos"],[0.5,1.02,"ddos"],[0.48,1.0,"ddos"],[0.54,1.04,"ddos"],[0.52,1.02,"ddos"],[0.47,0.98,"ddos"],[0.49,1.0,"ddos"],[0.53,1.04,"ddos"],[0.47,0.99,"ddos"],[0.58,1.07,"ddos"],[0.47,0.99,"ddos"],[0.49,1.0,"ddos"],[0.47,0.99,"ddos"],[0.38,0.91,"ddos"],[0.52,1.02,"ddos"],[0.49,0.99,"ddos"],[0.56,1.06,"ddos"],[0.51,1.02,"ddos"],[0.47,0.98,"ddos"],[0.47,0.98,"ddos"],[0.58,1.05,"ddos"],[0.47,0.99,"ddos"],[0.49,1.0,"ddos"],[0.43,0.95,"ddos"],[0.53,1.04,"ddos"],[0.47,0.98,"ddos"],[0.42,0.94,"ddos"],[0.49,0.99,"ddos"],[0.41,0.93,"ddos"],[0.49,1.0,"ddos"],[0.45,0.97,"ddos"],[0.45,0.97,"ddos"],[0.48,0.99,"ddos"],[0.52,1.03,"ddos"],[0.47,0.99,"ddos"],[0.45,0.97,"ddos"],[0.54,1.04,"ddos"],[0.53,1.04,"ddos"],[0.44,0.96,"ddos"],[0.52,1.01,"ddos"],[0.5,1.01,"ddos"],[0.54,1.04,"ddos"],[0.54,1.05,"ddos"],[0.58,1.07,"ddos"],[0.5,1.0,"ddos"],[0.51,1.02,"ddos"],[0.47,0.99,"ddos"],[0.52,1.03,"ddos"],[0.5,1.01,"ddos"],[0.48,1.0,"ddos"],[0.48,0.99,"ddos"],[0.43,0.95,"ddos"],[0.48,0.99,"ddos"],[0.49,0.99,"ddos"],[0.53,1.03,"ddos"],[0.5,1.01,"ddos"],[0.55,1.06,"ddos"],[0.51,1.01,"ddos"],[0.46,0.98,"ddos"],[0.44,0.96,"ddos"],[0.44,0.95,"ddos"],[0.49,0.99,"ddos"],[0.51,1.02,"ddos"],[0.46,0.99,"ddos"],[0.51,1.02,"ddos"],[0.43,0.96,"ddos"],[0.46,0.97,"ddos"],[0.49,1.0,"ddos"],[0.45,0.97,"ddos"],[0.46,0.98,"ddos"],[0.46,0.98,"ddos"],[0.47,0.99,"ddos"],[0.4,0.93,"ddos"],[0.55,1.05,"ddos"],[0.46,0.97,"ddos"],[0.58,1.07,"ddos"],[0.34,0.88,"ddos"],[0.52,1.03,"ddos"],[0.54,1.04,"ddos"],[0.46,0.98,"ddos"],[0.49,1.0,"ddos"],[0.48,1.0,"ddos"],[0.45,0.97,"ddos"],[0.49,1.0,"ddos"],[0.49,1.0,"ddos"],[0.45,0.97,"ddos"],[0.48,0.99,"ddos"],[0.39,0.92,"ddos"],[0.48,1.0,"ddos"],[0.5,1.01,"ddos"],[0.56,1.06,"ddos"],[0.45,0.97,"ddos"],[0.47,0.97,"ddos"],[0.41,0.93,"ddos"],[0.51,1.01,"ddos"],[0.59,1.09,"ddos"],[0.5,1.01,"ddos"],[0.52,1.02,"ddos"],[0.55,1.05,"ddos"],[0.48,0.99,"ddos"],[0.57,1.07,"ddos"],[0.47,0.98,"ddos"],[0.42,0.95,"ddos"],[0.47,0.98,"ddos"],[0.43,0.95,"ddos"],[0.52,1.0,"ddos"],[0.47,0.98,"ddos"],[0.39,0.92,"ddos"],[0.5,1.01,"ddos"],[0.47,0.98,"ddos"],[0.41,0.94,"ddos"],[0.46,0.98,"ddos"],[0.47,0.98,"ddos"],[0.51,1.01,"ddos"],[0.54,1.05,"ddos"],[0.49,1.0,"ddos"],[0.45,0.97,"ddos"],[0.51,1.01,"ddos"],[0.54,1.04,"ddos"],[0.55,1.05,"ddos"],[0.48,1.0,"ddos"],[0.46,0.97,"ddos"],[0.51,1.03,"ddos"],[0.43,0.95,"ddos"],[0.45,0.97,"ddos"],[0.55,1.05,"ddos"],[0.43,0.95,"ddos"],[0.43,0.95,"ddos"],[0.37,0.9,"ddos"],[0.45,0.97,"ddos"],[0.45,0.97,"ddos"],[0.52,1.03,"ddos"],[0.44,0.95,"ddos"],[0.5,1.01,"ddos"],[0.52,1.03,"ddos"],[0.38,0.92,"ddos"],[0.4,0.93,"ddos"],[0.48,1.0,"ddos"],[0.5,1.01,"ddos"],[0.57,1.07,"ddos"],[0.47,0.99,"ddos"],[0.48,1.0,"ddos"],[0.52,1.02,"ddos"],[0.46,0.98,"ddos"],[0.46,0.97,"ddos"],[0.45,0.98,"ddos"],[0.47,0.99,"ddos"],[0.49,1.0,"ddos"],[0.49,1.01,"ddos"],[0.54,1.04,"ddos"],[0.48,0.99,"ddos"],[0.49,1.0,"ddos"],[0.46,0.98,"ddos"],[0.47,0.97,"ddos"],[0.52,1.02,"ddos"],[0.42,0.95,"ddos"],[0.48,0.99,"ddos"],[0.54,1.04,"ddos"],[0.54,1.04,"ddos"],[0.56,1.07,"ddos"],[0.49,1.0,"ddos"],[0.42,0.94,"ddos"],[0.52,1.02,"ddos"],[0.46,0.97,"ddos"],[0.51,1.02,"ddos"],[0.49,1.0,"ddos"],[0.5,1.01,"ddos"],[0.45,0.97,"ddos"],[0.53,1.03,"ddos"],[0.52,1.03,"ddos"],[0.45,0.97,"ddos"],[0.46,0.98,"ddos"],[0.52,1.03,"ddos"],[0.46,0.98,"ddos"],[0.45,0.96,"ddos"],[0.58,1.07,"ddos"],[0.47,0.98,"ddos"],[0.52,1.03,"ddos"],[0.44,0.96,"ddos"],[0.46,0.98,"ddos"],[0.34,0.87,"ddos"],[0.42,0.94,"ddos"],[0.47,0.99,"ddos"],[0.51,1.02,"ddos"],[0.53,1.02,"ddos"],[0.54,1.03,"ddos"],[0.46,0.97,"ddos"],[0.46,0.98,"ddos"],[0.49,1.0,"ddos"],[0.48,0.99,"ddos"],[0.51,1.02,"ddos"],[0.48,1.0,"ddos"],[0.51,1.01,"ddos"],[0.44,0.95,"ddos"],[0.45,0.97,"ddos"],[0.46,0.99,"ddos"],[0.49,1.0,"ddos"],[0.49,1.0,"ddos"],[0.47,0.97,"ddos"],[0.51,1.01,"ddos"],[0.52,1.03,"ddos"],[0.49,1.0,"ddos"],[0.46,0.98,"ddos"],[0.46,0.98,"ddos"],[0.52,1.03,"ddos"],[0.5,1.01,"ddos"],[0.56,1.07,"ddos"],[0.47,0.99,"ddos"],[0.5,1.01,"ddos"],[0.53,1.02,"ddos"],[0.49,1.0,"ddos"],[0.42,0.94,"ddos"],[0.5,1.0,"ddos"],[0.51,1.02,"ddos"],[0.52,1.03,"ddos"],[0.44,0.96,"ddos"],[0.49,1.0,"ddos"],[0.57,1.06,"ddos"],[0.56,1.05,"ddos"],[0.49,1.0,"ddos"],[0.53,1.02,"ddos"],[0.52,1.03,"ddos"],[0.39,0.92,"ddos"],[0.49,1.0,"ddos"],[0.51,1.02,"ddos"],[0.54,1.04,"ddos"],[0.42,0.94,"ddos"],[0.5,1.01,"ddos"],[0.51,1.02,"ddos"],[0.44,0.97,"ddos"],[0.49,1.0,"ddos"],[0.4,0.93,"ddos"],[0.46,0.98,"ddos"],[0.55,1.01,"ddos"],[0.51,1.02,"ddos"],[0.52,1.02,"ddos"],[0.56,1.07,"ddos"],[0.54,1.01,"ddos"],[0.54,1.04,"ddos"],[0.48,1.0,"ddos"],[0.6,1.05,"ddos"],[0.43,0.95,"ddos"],[0.52,1.03,"ddos"],[0.43,0.96,"ddos"],[0.51,1.01,"ddos"],[0.46,0.99,"ddos"],[0.47,0.99,"ddos"],[0.45,0.96,"ddos"],[0.5,1.01,"ddos"],[0.46,0.97,"ddos"],[0.56,1.06,"ddos"],[0.48,1.0,"ddos"],[0.48,0.98,"ddos"],[0.54,1.05,"ddos"],[0.46,0.97,"ddos"],[0.52,1.03,"ddos"],[0.5,1.0,"ddos"],[0.49,1.0,"ddos"],[0.47,0.99,"ddos"],[0.44,0.96,"ddos"],[0.52,1.02,"ddos"],[0.45,0.96,"ddos"],[0.51,1.02,"ddos"],[0.42,0.95,"ddos"],[0.46,0.98,"ddos"],[0.48,1.0,"ddos"],[0.49,1.0,"ddos"],[0.55,1.06,"ddos"],[0.43,0.95,"ddos"],[0.46,0.97,"ddos"],[0.49,1.0,"ddos"],[-0.45,0.11,"dga_c2"],[-0.44,0.1,"dga_c2"],[-0.44,0.07,"dga_c2"],[-0.44,0.07,"dga_c2"],[-0.45,0.1,"dga_c2"],[-0.43,0.01,"dga_c2"],[-0.4,-0.05,"dga_c2"],[-0.44,0.1,"dga_c2"],[-0.45,0.12,"dga_c2"],[-0.46,0.1,"dga_c2"],[-0.45,0.1,"dga_c2"],[-0.44,0.11,"dga_c2"],[-0.46,0.1,"dga_c2"],[-0.44,0.13,"dga_c2"],[-0.43,0.05,"dga_c2"],[-0.46,0.14,"dga_c2"],[-0.46,0.15,"dga_c2"],[-0.45,0.14,"dga_c2"],[-0.44,0.08,"dga_c2"],[-0.46,0.1,"dga_c2"],[-0.43,0.05,"dga_c2"],[-0.42,0.08,"dga_c2"],[-0.4,-0.03,"dga_c2"],[-0.45,0.15,"dga_c2"],[-0.42,0.01,"dga_c2"],[-0.43,0.06,"dga_c2"],[-0.45,0.14,"dga_c2"],[-0.42,0.01,"dga_c2"],[-0.38,-0.12,"dga_c2"],[-0.41,0.01,"dga_c2"],[-0.43,0.03,"dga_c2"],[-0.45,0.16,"dga_c2"],[-0.46,0.12,"dga_c2"],[-0.41,-0.0,"dga_c2"],[-0.44,0.12,"dga_c2"],[-0.37,-0.09,"dga_c2"],[-0.45,0.13,"dga_c2"],[-0.46,0.12,"dga_c2"],[-0.33,-0.26,"dga_c2"],[-0.45,0.12,"dga_c2"],[-0.46,0.13,"dga_c2"],[-0.47,0.14,"dga_c2"],[-0.46,0.12,"dga_c2"],[-0.4,0.05,"dga_c2"],[-0.44,0.05,"dga_c2"],[-0.44,0.14,"dga_c2"],[-0.46,0.15,"dga_c2"],[-0.45,0.12,"dga_c2"],[-0.45,0.1,"dga_c2"],[-0.46,0.12,"dga_c2"],[-0.45,0.07,"dga_c2"],[-0.44,0.08,"dga_c2"],[-0.47,0.13,"dga_c2"],[-0.43,0.03,"dga_c2"],[-0.44,0.09,"dga_c2"],[-0.42,0.02,"dga_c2"],[-0.43,0.12,"dga_c2"],[-0.42,0.04,"dga_c2"],[-0.44,0.09,"dga_c2"],[-0.44,0.1,"dga_c2"],[-0.45,0.07,"dga_c2"],[-0.44,0.06,"dga_c2"],[-0.44,0.07,"dga_c2"],[-0.42,0.1,"dga_c2"],[-0.44,0.08,"dga_c2"],[-0.44,0.08,"dga_c2"],[-0.41,-0.02,"dga_c2"],[-0.44,0.08,"dga_c2"],[-0.42,0.04,"dga_c2"],[-0.45,0.11,"dga_c2"],[-0.45,0.12,"dga_c2"],[-0.4,-0.01,"dga_c2"],[-0.44,0.12,"dga_c2"],[-0.37,-0.12,"dga_c2"],[-0.43,0.1,"dga_c2"],[-0.4,-0.05,"dga_c2"],[-0.46,0.1,"dga_c2"],[-0.41,0.1,"dga_c2"],[-0.45,0.07,"dga_c2"],[-0.42,0.05,"dga_c2"],[-0.43,0.07,"dga_c2"],[-0.46,0.14,"dga_c2"],[-0.46,0.15,"dga_c2"],[-0.44,0.05,"dga_c2"],[-0.45,0.12,"dga_c2"],[-0.45,0.11,"dga_c2"],[-0.46,0.14,"dga_c2"],[-0.45,0.09,"dga_c2"],[-0.44,0.07,"dga_c2"],[-0.43,0.08,"dga_c2"],[-0.44,0.06,"dga_c2"],[-0.44,0.12,"dga_c2"],[-0.43,0.05,"dga_c2"],[-0.41,0.09,"dga_c2"],[-0.45,0.1,"dga_c2"],[-0.46,0.13,"dga_c2"],[-0.43,0.09,"dga_c2"],[-0.4,0.03,"dga_c2"],[-0.45,0.09,"dga_c2"],[-0.45,0.09,"dga_c2"],[-0.43,0.05,"dga_c2"],[-0.42,0.06,"dga_c2"],[-0.44,0.12,"dga_c2"],[-0.43,0.13,"dga_c2"],[-0.46,0.09,"dga_c2"],[-0.46,0.12,"dga_c2"],[-0.43,0.07,"dga_c2"],[-0.44,0.12,"dga_c2"],[-0.46,0.16,"dga_c2"],[-0.46,0.11,"dga_c2"],[-0.44,0.06,"dga_c2"],[-0.41,-0.04,"dga_c2"],[-0.45,0.06,"dga_c2"],[-0.43,0.09,"dga_c2"],[-0.4,-0.02,"dga_c2"],[-0.42,0.05,"dga_c2"],[-0.41,0.04,"dga_c2"],[-0.41,0.02,"dga_c2"],[-0.42,0.09,"dga_c2"],[-0.44,0.08,"dga_c2"],[-0.44,0.08,"dga_c2"],[-0.43,0.06,"dga_c2"],[-0.45,0.13,"dga_c2"],[-0.43,0.05,"dga_c2"],[-0.37,-0.1,"dga_c2"],[-0.44,0.04,"dga_c2"],[-0.45,0.13,"dga_c2"],[-0.46,0.11,"dga_c2"],[-0.43,0.06,"dga_c2"],[-0.43,0.04,"dga_c2"],[-0.41,0.04,"dga_c2"],[-0.43,0.09,"dga_c2"],[-0.45,0.06,"dga_c2"],[-0.45,0.05,"dga_c2"],[-0.47,0.14,"dga_c2"],[-0.37,-0.03,"dga_c2"],[-0.38,-0.09,"dga_c2"],[-0.46,0.1,"dga_c2"],[-0.45,0.08,"dga_c2"],[-0.45,0.11,"dga_c2"],[-0.44,0.13,"dga_c2"],[-0.44,0.11,"dga_c2"],[-0.45,0.06,"dga_c2"],[-0.44,0.05,"dga_c2"],[-0.39,-0.07,"dga_c2"],[-0.45,0.1,"dga_c2"],[-0.44,0.13,"dga_c2"],[-0.45,0.08,"dga_c2"],[-0.46,0.12,"dga_c2"],[-0.4,0.02,"dga_c2"],[-0.45,0.09,"dga_c2"],[-0.41,0.02,"dga_c2"],[-0.43,0.03,"dga_c2"],[-0.46,0.09,"dga_c2"],[-0.37,-0.09,"dga_c2"],[-0.46,0.12,"dga_c2"],[-0.42,0.0,"dga_c2"],[-0.42,0.11,"dga_c2"],[-0.43,0.06,"dga_c2"],[-0.47,0.14,"dga_c2"],[-0.44,0.05,"dga_c2"],[-0.45,0.14,"dga_c2"],[-0.45,0.11,"dga_c2"],[-0.44,0.05,"dga_c2"],[-0.45,0.12,"dga_c2"],[-0.41,0.1,"dga_c2"],[-0.46,0.09,"dga_c2"],[-0.45,0.1,"dga_c2"],[-0.44,0.07,"dga_c2"],[-0.46,0.13,"dga_c2"],[-0.45,0.12,"dga_c2"],[-0.45,0.09,"dga_c2"],[-0.44,0.04,"dga_c2"],[-0.42,-0.01,"dga_c2"],[-0.43,0.09,"dga_c2"],[-0.44,0.04,"dga_c2"],[-0.45,0.13,"dga_c2"],[-0.45,0.1,"dga_c2"],[-0.43,0.06,"dga_c2"],[-0.44,0.07,"dga_c2"],[-0.39,0.06,"dga_c2"],[-0.46,0.11,"dga_c2"],[-0.43,0.08,"dga_c2"],[-0.45,0.1,"dga_c2"],[-0.43,0.05,"dga_c2"],[-0.43,0.08,"dga_c2"],[-0.43,0.1,"dga_c2"],[-0.43,0.09,"dga_c2"],[-0.44,0.09,"dga_c2"],[-0.43,0.08,"dga_c2"],[-0.44,0.1,"dga_c2"],[-0.47,0.13,"dga_c2"],[-0.45,0.08,"dga_c2"],[-0.44,0.14,"dga_c2"],[-0.47,0.13,"dga_c2"],[-0.42,-0.01,"dga_c2"],[-0.41,0.01,"dga_c2"],[-0.44,0.14,"dga_c2"],[-0.39,-0.07,"dga_c2"],[-0.46,0.14,"dga_c2"],[-0.42,0.06,"dga_c2"],[-0.39,-0.06,"dga_c2"],[-0.44,0.08,"dga_c2"],[-0.43,0.06,"dga_c2"],[-0.42,0.13,"dga_c2"],[-0.45,0.08,"dga_c2"],[-0.45,0.13,"dga_c2"],[-0.44,0.04,"dga_c2"],[-0.47,0.14,"dga_c2"],[-0.44,0.08,"dga_c2"],[-0.45,0.12,"dga_c2"],[-0.42,0.0,"dga_c2"],[-0.44,0.11,"dga_c2"],[-0.46,0.13,"dga_c2"],[-0.44,0.08,"dga_c2"],[-0.39,-0.01,"dga_c2"],[-0.44,0.12,"dga_c2"],[-0.45,0.14,"dga_c2"],[-0.45,0.09,"dga_c2"],[-0.45,0.14,"dga_c2"],[-0.44,0.11,"dga_c2"],[-0.42,0.05,"dga_c2"],[-0.45,0.08,"dga_c2"],[-0.41,0.08,"dga_c2"],[-0.43,0.05,"dga_c2"],[-0.45,0.15,"dga_c2"],[-0.42,0.01,"dga_c2"],[-0.43,0.03,"dga_c2"],[-0.46,0.14,"dga_c2"],[-0.45,0.13,"dga_c2"],[-0.44,0.1,"dga_c2"],[-0.46,0.14,"dga_c2"],[-0.43,0.04,"dga_c2"],[-0.41,0.02,"dga_c2"],[-0.46,0.11,"dga_c2"],[-0.45,0.1,"dga_c2"],[-0.46,0.12,"dga_c2"],[-0.45,0.13,"dga_c2"],[-0.42,0.02,"dga_c2"],[-0.41,0.03,"dga_c2"],[-0.46,0.13,"dga_c2"],[-0.45,0.1,"dga_c2"],[-0.44,0.11,"dga_c2"],[-0.44,0.07,"dga_c2"],[-0.44,0.13,"dga_c2"],[-0.46,0.13,"dga_c2"],[-0.46,0.12,"dga_c2"],[-0.46,0.1,"dga_c2"],[-0.44,0.06,"dga_c2"],[-0.46,0.1,"dga_c2"],[-0.44,0.11,"dga_c2"],[-0.45,0.06,"dga_c2"],[-0.46,0.11,"dga_c2"],[-0.42,0.12,"dga_c2"],[-0.45,0.07,"dga_c2"],[-0.46,0.11,"dga_c2"],[-0.42,0.06,"dga_c2"],[-0.43,0.07,"dga_c2"],[-0.44,0.07,"dga_c2"],[-0.41,0.05,"dga_c2"],[-0.44,0.1,"dga_c2"],[-0.39,-0.11,"dga_c2"],[-0.45,0.13,"dga_c2"],[-0.41,0.04,"dga_c2"],[-0.46,0.14,"dga_c2"],[-0.46,0.09,"dga_c2"],[-0.45,0.12,"dga_c2"],[-0.47,0.11,"dga_c2"],[-0.42,0.07,"dga_c2"],[-0.46,0.07,"dga_c2"],[-0.44,0.06,"dga_c2"],[-0.36,-0.12,"dga_c2"],[-0.43,0.05,"dga_c2"],[-0.43,0.06,"dga_c2"],[-0.43,0.08,"dga_c2"],[-0.47,0.11,"dga_c2"],[-0.45,0.1,"dga_c2"],[-0.46,0.12,"dga_c2"],[-0.42,0.09,"dga_c2"],[-0.44,0.08,"dga_c2"],[-0.43,0.04,"dga_c2"],[-0.46,0.14,"dga_c2"],[-0.45,0.07,"dga_c2"],[-0.43,0.07,"dga_c2"],[-0.44,0.06,"dga_c2"],[-0.46,0.15,"dga_c2"],[-0.4,-0.07,"dga_c2"],[-0.44,0.06,"dga_c2"],[-0.45,0.06,"dga_c2"],[-0.41,-0.06,"dga_c2"],[-0.48,0.14,"dga_c2"],[-0.41,0.02,"dga_c2"],[-0.44,0.12,"dga_c2"],[-0.44,0.09,"dga_c2"],[-0.42,0.08,"dga_c2"],[-0.43,0.03,"dga_c2"],[-0.45,0.12,"dga_c2"],[-0.42,0.04,"dga_c2"],[-0.45,0.06,"dga_c2"],[-0.43,0.1,"dga_c2"],[-0.45,0.14,"dga_c2"],[-0.45,0.1,"dga_c2"],[-0.4,0.06,"dga_c2"],[-0.44,0.08,"dga_c2"],[-0.45,0.08,"dga_c2"],[-0.44,0.12,"dga_c2"],[-0.45,0.06,"dga_c2"],[-0.45,0.11,"dga_c2"],[-0.46,0.11,"dga_c2"],[-0.45,0.12,"dga_c2"],[-0.43,0.07,"dga_c2"],[-0.45,0.13,"dga_c2"],[-0.43,0.11,"dga_c2"],[-0.43,0.07,"dga_c2"],[-0.48,0.16,"dga_c2"],[-0.46,0.13,"dga_c2"],[-0.46,0.11,"dga_c2"],[-0.44,0.13,"dga_c2"],[-0.45,0.08,"dga_c2"],[-0.46,0.11,"dga_c2"],[2.52,1.33,"data_exfil"],[2.91,1.01,"data_exfil"],[6.34,1.69,"data_exfil"],[15.66,3.51,"data_exfil"],[8.3,2.16,"data_exfil"],[2.84,1.29,"data_exfil"],[11.85,1.77,"data_exfil"],[2.55,1.31,"data_exfil"],[7.85,3.11,"data_exfil"],[8.03,2.97,"data_exfil"],[6.36,2.06,"data_exfil"],[5.04,1.67,"data_exfil"],[2.84,1.26,"data_exfil"],[7.55,1.8,"data_exfil"],[13.18,2.73,"data_exfil"],[6.23,1.48,"data_exfil"],[5.2,2.28,"data_exfil"],[2.82,1.29,"data_exfil"],[4.46,1.4,"data_exfil"],[14.33,3.31,"data_exfil"],[8.77,2.1,"data_exfil"],[6.3,1.74,"data_exfil"],[8.09,2.04,"data_exfil"],[3.9,1.22,"data_exfil"],[39.43,8.15,"data_exfil"],[3.8,1.24,"data_exfil"],[2.6,1.36,"data_exfil"],[3.18,1.5,"data_exfil"],[5.49,2.0,"data_exfil"],[6.58,1.68,"data_exfil"],[7.21,2.04,"data_exfil"],[10.14,2.85,"data_exfil"],[23.36,5.89,"data_exfil"],[1.72,0.93,"data_exfil"],[3.57,1.78,"data_exfil"],[7.09,1.72,"data_exfil"],[4.2,1.39,"data_exfil"],[6.18,1.52,"data_exfil"],[6.17,2.25,"data_exfil"],[0.74,0.7,"data_exfil"],[5.48,1.78,"data_exfil"],[3.18,1.55,"data_exfil"],[16.64,4.75,"data_exfil"],[5.85,1.54,"data_exfil"],[5.74,1.75,"data_exfil"],[2.65,1.36,"data_exfil"],[4.65,1.43,"data_exfil"],[3.33,1.6,"data_exfil"],[3.25,1.19,"data_exfil"],[12.5,4.54,"data_exfil"],[7.14,1.74,"data_exfil"],[2.88,1.34,"data_exfil"],[4.93,1.81,"data_exfil"],[4.85,1.42,"data_exfil"],[2.49,1.18,"data_exfil"],[13.93,3.19,"data_exfil"],[11.82,3.55,"data_exfil"],[12.28,2.02,"data_exfil"],[8.95,3.39,"data_exfil"],[6.52,1.43,"data_exfil"],[8.02,2.52,"data_exfil"],[21.26,5.6,"data_exfil"],[0.71,0.73,"data_exfil"],[6.44,2.02,"data_exfil"],[5.83,1.52,"data_exfil"],[12.04,2.74,"data_exfil"],[1.85,0.9,"data_exfil"],[3.2,1.15,"data_exfil"],[3.73,1.53,"data_exfil"],[30.72,7.46,"data_exfil"],[3.79,1.05,"data_exfil"],[4.13,1.78,"data_exfil"],[2.67,1.12,"data_exfil"],[6.2,2.03,"data_exfil"],[8.42,1.92,"data_exfil"],[5.46,2.37,"data_exfil"],[5.56,1.57,"data_exfil"],[3.05,1.47,"data_exfil"],[2.26,1.28,"data_exfil"],[2.38,1.13,"data_exfil"],[1.94,1.22,"data_exfil"],[4.12,1.22,"data_exfil"],[8.86,3.11,"data_exfil"],[3.54,1.36,"data_exfil"],[12.0,3.2,"data_exfil"],[8.65,2.31,"data_exfil"],[11.25,4.42,"data_exfil"],[5.81,1.61,"data_exfil"],[15.33,2.38,"data_exfil"],[7.65,1.67,"data_exfil"],[4.17,1.49,"data_exfil"],[4.8,1.58,"data_exfil"],[5.14,2.15,"data_exfil"],[9.78,2.82,"data_exfil"],[4.03,1.68,"data_exfil"],[5.33,1.81,"data_exfil"],[7.0,1.31,"data_exfil"],[5.47,1.87,"data_exfil"],[3.11,1.22,"data_exfil"],[5.05,1.89,"data_exfil"],[3.88,1.85,"data_exfil"],[6.45,2.18,"data_exfil"],[11.45,3.07,"data_exfil"],[7.56,2.03,"data_exfil"],[4.32,1.89,"data_exfil"],[4.78,1.5,"data_exfil"],[11.58,3.55,"data_exfil"],[2.55,1.25,"data_exfil"],[6.12,2.36,"data_exfil"],[8.25,1.95,"data_exfil"],[4.34,1.82,"data_exfil"],[4.91,1.44,"data_exfil"],[4.58,1.3,"data_exfil"],[2.31,1.37,"data_exfil"],[7.63,2.58,"data_exfil"],[9.12,2.82,"data_exfil"],[3.11,1.3,"data_exfil"],[2.32,0.83,"data_exfil"],[4.83,1.34,"data_exfil"],[1.55,0.95,"data_exfil"],[3.59,1.7,"data_exfil"],[10.15,3.09,"data_exfil"],[3.8,1.56,"data_exfil"],[5.22,1.91,"data_exfil"],[2.41,1.27,"data_exfil"],[6.29,1.43,"data_exfil"],[7.57,3.08,"data_exfil"],[9.59,2.14,"data_exfil"],[9.55,3.0,"data_exfil"],[9.86,2.16,"data_exfil"],[1.51,0.85,"data_exfil"],[8.98,2.99,"data_exfil"],[10.76,3.49,"data_exfil"],[1.88,1.0,"data_exfil"],[1.11,0.89,"data_exfil"],[4.3,1.93,"data_exfil"],[7.35,1.68,"data_exfil"],[3.26,1.46,"data_exfil"],[6.74,1.86,"data_exfil"],[14.0,3.41,"data_exfil"],[2.3,1.23,"data_exfil"],[3.58,1.49,"data_exfil"],[7.89,2.65,"data_exfil"],[1.07,0.84,"data_exfil"],[6.95,1.64,"data_exfil"],[7.6,2.64,"data_exfil"],[11.34,2.38,"data_exfil"],[5.24,2.17,"data_exfil"],[4.28,1.57,"data_exfil"],[2.68,1.19,"data_exfil"],[2.88,1.43,"data_exfil"],[3.35,1.6,"data_exfil"],[1.97,1.06,"data_exfil"],[1.59,0.81,"data_exfil"],[10.59,2.79,"data_exfil"],[2.03,0.89,"data_exfil"],[5.6,2.27,"data_exfil"],[2.92,1.4,"data_exfil"],[5.61,1.76,"data_exfil"],[12.0,2.53,"data_exfil"],[1.43,1.01,"data_exfil"],[20.19,3.62,"data_exfil"],[5.56,1.84,"data_exfil"],[4.99,2.25,"data_exfil"],[10.39,2.49,"data_exfil"],[1.12,0.87,"data_exfil"],[6.46,1.96,"data_exfil"],[9.72,2.18,"data_exfil"],[10.18,2.1,"data_exfil"],[8.68,1.48,"data_exfil"],[11.17,3.73,"data_exfil"],[0.82,0.77,"data_exfil"],[3.78,1.63,"data_exfil"],[4.3,1.67,"data_exfil"],[4.06,1.38,"data_exfil"],[2.18,1.33,"data_exfil"],[6.94,1.87,"data_exfil"],[3.44,1.34,"data_exfil"],[3.23,1.33,"data_exfil"],[5.76,1.4,"data_exfil"],[1.55,0.84,"data_exfil"],[1.61,0.89,"data_exfil"],[8.87,3.15,"data_exfil"],[1.15,0.83,"data_exfil"],[2.16,1.03,"data_exfil"],[5.32,1.58,"data_exfil"],[5.62,1.65,"data_exfil"],[3.08,1.37,"data_exfil"],[4.97,1.53,"data_exfil"],[5.62,1.97,"data_exfil"],[2.75,1.34,"data_exfil"],[6.23,1.46,"data_exfil"],[6.26,2.28,"data_exfil"],[2.42,1.28,"data_exfil"],[5.79,2.2,"data_exfil"],[3.61,1.48,"data_exfil"],[4.47,1.93,"data_exfil"],[9.48,3.35,"data_exfil"],[3.37,1.27,"data_exfil"],[3.12,1.43,"data_exfil"],[1.57,0.9,"data_exfil"],[3.25,1.24,"data_exfil"],[5.08,1.88,"data_exfil"],[17.0,3.82,"data_exfil"],[8.7,2.11,"data_exfil"],[2.01,1.23,"data_exfil"],[1.65,1.06,"data_exfil"],[5.45,1.86,"data_exfil"],[12.05,4.88,"data_exfil"],[1.13,0.97,"data_exfil"],[7.63,3.15,"data_exfil"],[3.38,1.33,"data_exfil"],[1.57,0.86,"data_exfil"],[3.21,1.22,"data_exfil"],[3.53,1.51,"data_exfil"],[3.52,1.16,"data_exfil"],[16.7,3.83,"data_exfil"],[5.23,1.54,"data_exfil"],[3.69,1.48,"data_exfil"],[3.44,1.53,"data_exfil"],[1.93,1.16,"data_exfil"],[13.48,3.35,"data_exfil"],[6.29,2.89,"data_exfil"],[1.07,0.81,"data_exfil"],[7.83,2.06,"data_exfil"],[13.15,2.97,"data_exfil"],[6.4,2.0,"data_exfil"],[3.49,1.27,"data_exfil"],[2.99,1.12,"data_exfil"],[32.14,7.64,"data_exfil"],[6.77,1.73,"data_exfil"],[9.57,1.96,"data_exfil"],[1.75,0.9,"data_exfil"],[5.95,2.22,"data_exfil"],[1.6,0.98,"data_exfil"],[3.93,1.38,"data_exfil"],[2.34,0.96,"data_exfil"],[9.45,2.8,"data_exfil"],[27.43,5.15,"data_exfil"],[6.89,1.54,"data_exfil"],[3.83,1.29,"data_exfil"],[3.53,1.64,"data_exfil"],[5.27,1.64,"data_exfil"],[2.51,1.09,"data_exfil"],[6.93,1.98,"data_exfil"],[7.27,1.97,"data_exfil"],[1.72,1.08,"data_exfil"],[11.32,3.35,"data_exfil"],[3.18,1.45,"data_exfil"],[6.44,2.09,"data_exfil"],[1.69,1.08,"data_exfil"],[7.75,1.73,"data_exfil"],[6.31,1.95,"data_exfil"],[7.86,1.87,"data_exfil"],[14.7,3.66,"data_exfil"],[15.76,5.07,"data_exfil"],[5.83,2.15,"data_exfil"],[22.74,5.49,"data_exfil"],[3.69,1.65,"data_exfil"],[6.29,2.15,"data_exfil"],[5.71,2.18,"data_exfil"],[13.02,3.36,"data_exfil"],[2.78,1.23,"data_exfil"],[1.99,1.18,"data_exfil"],[7.98,2.21,"data_exfil"],[3.46,1.5,"data_exfil"],[1.7,1.13,"data_exfil"],[1.58,0.95,"data_exfil"],[5.92,2.09,"data_exfil"],[2.72,1.32,"data_exfil"],[3.45,1.38,"data_exfil"],[13.23,3.81,"data_exfil"],[10.69,2.43,"data_exfil"],[14.29,4.39,"data_exfil"],[7.24,1.84,"data_exfil"],[2.51,1.11,"data_exfil"],[2.2,1.02,"data_exfil"],[3.52,1.22,"data_exfil"],[1.41,0.99,"data_exfil"],[10.23,1.56,"data_exfil"],[7.33,1.76,"data_exfil"],[8.64,2.11,"data_exfil"],[24.87,5.39,"data_exfil"],[5.86,1.29,"data_exfil"],[7.1,2.27,"data_exfil"],[2.23,1.17,"data_exfil"],[21.0,4.88,"data_exfil"],[20.62,4.9,"data_exfil"],[2.39,0.99,"data_exfil"],[4.36,1.28,"data_exfil"],[3.67,1.49,"data_exfil"],[34.45,7.55,"data_exfil"],[3.73,1.48,"data_exfil"],[6.27,2.04,"data_exfil"],[3.08,1.18,"data_exfil"],[2.98,1.09,"data_exfil"],[3.43,1.35,"data_exfil"],[8.17,1.65,"data_exfil"],[7.41,3.25,"data_exfil"],[2.33,1.11,"data_exfil"],[2.88,1.4,"data_exfil"],[7.59,3.3,"data_exfil"],[7.45,2.66,"data_exfil"],[4.87,1.56,"data_exfil"],[2.95,1.14,"data_exfil"],[5.68,1.71,"data_exfil"],[7.62,2.05,"data_exfil"],[2.21,1.12,"data_exfil"],[16.93,3.29,"data_exfil"],[16.37,3.48,"data_exfil"],[6.25,1.96,"data_exfil"],[3.64,1.32,"data_exfil"],[4.32,1.82,"data_exfil"],[30.53,7.59,"data_exfil"],[1.47,0.87,"data_exfil"],[15.86,4.28,"data_exfil"],[9.21,2.39,"data_exfil"],[9.56,2.45,"data_exfil"],[3.25,1.21,"data_exfil"],[10.28,3.93,"data_exfil"]],"anomaly":{"flagged":3892,"tp":3241,"fp":651,"fn":359,"precision":0.8327,"recall":0.9003,"f1":0.8652},"recall_by_class":{"port_scan":1.0,"ddos":1.0,"dga_c2":0.4937,"data_exfil":1.0},"tests":{"duration":{"welch_t":-11.7,"welch_p":5.9e-31,"mwu_p":0.0},"packets":{"welch_t":-43.6,"welch_p":0.0,"mwu_p":1.36e-49},"distinct_dst_ports":{"welch_t":-41.4,"welch_p":4.21e-307,"mwu_p":5.66e-18}},"moments":{"src_bytes_skew":12.2,"src_bytes_kurt":199.6,"log_skew":0.21,"log_kurt":0.5},"medians":{"packets_benign":21.0,"packets_attack":10.0}};
+
+/* ---------- helpers ---------- */
+const CLASS_ORDER = ["benign", "port_scan", "ddos", "dga_c2", "data_exfil"];
+const CLASS_PT = {
+  benign: "benigno", port_scan: "port scan", ddos: "DDoS",
+  dga_c2: "C2 / DGA", data_exfil: "exfiltração"
+};
+const CLASS_VAR = { benign: "--s1", port_scan: "--s2", ddos: "--s3", dga_c2: "--s4", data_exfil: "--s5" };
+const cvar = c => `var(${CLASS_VAR[c]})`;
+const fmt = (n, d = 2) => n.toLocaleString("pt-BR", { minimumFractionDigits: d, maximumFractionDigits: d });
+const fmtInt = n => n.toLocaleString("pt-BR");
+const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+const tip = document.getElementById("tip");
+function showTip(ev, html) {
+  tip.innerHTML = html;
+  tip.style.opacity = 1;
+  const pad = 14;
+  let x = ev.clientX + pad, y = ev.clientY + pad;
+  const r = tip.getBoundingClientRect();
+  if (x + r.width > innerWidth - 8) x = ev.clientX - r.width - pad;
+  if (y + r.height > innerHeight - 8) y = ev.clientY - r.height - pad;
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+}
+function hideTip() { tip.style.opacity = 0; }
+
+/* ---------- hero: campo de fluxos ---------- */
+(function () {
+  const cv = document.getElementById("flowfield");
+  const ctx = cv.getContext("2d");
+  let W, H, dots = [];
+  function size() {
+    W = cv.width = cv.offsetWidth * devicePixelRatio;
+    H = cv.height = cv.offsetHeight * devicePixelRatio;
+  }
+  function init() {
+    size();
+    const n = Math.min(110, Math.floor(W / 22));
+    dots = Array.from({ length: n }, () => ({
+      x: Math.random() * W, y: Math.random() * H,
+      v: (0.15 + Math.random() * 0.5) * devicePixelRatio,
+      r: (Math.random() < 0.08) ? 2.6 : 1.3,
+      bad: Math.random() < 0.06,
+      ph: Math.random() * Math.PI * 2,
+    }));
+  }
+  function draw(t) {
+    ctx.clearRect(0, 0, W, H);
+    // gridlines tênues
+    ctx.strokeStyle = "rgba(34,48,68,0.55)"; ctx.lineWidth = 1;
+    const gs = 64 * devicePixelRatio;
+    for (let x = 0; x < W; x += gs) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+    for (let y = 0; y < H; y += gs) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+    for (const d of dots) {
+      d.x += d.v; if (d.x > W + 10) { d.x = -10; d.y = Math.random() * H; }
+      const pulse = d.bad ? (0.55 + 0.45 * Math.sin(t / 420 + d.ph)) : 1;
+      ctx.beginPath();
+      ctx.arc(d.x, d.y, d.r * devicePixelRatio * pulse, 0, Math.PI * 2);
+      ctx.fillStyle = d.bad ? "rgba(230,103,103,0.85)" : "rgba(76,201,212,0.5)";
+      ctx.fill();
+    }
+  }
+  function loop(t) { draw(t); requestAnimationFrame(loop); }
+  init();
+  addEventListener("resize", init);
+  if (REDUCED) draw(0); else requestAnimationFrame(loop);
+})();
+
+/* ---------- demo: entropia ao vivo ---------- */
+function shannon(s) {
+  if (!s.length) return 0;
+  const c = {};
+  for (const ch of s) c[ch] = (c[ch] || 0) + 1;
+  let h = 0;
+  for (const k in c) { const p = c[k] / s.length; h -= p * Math.log2(p); }
+  return h;
+}
+const REF = DATA.demo_ref;
+document.getElementById("bandb").textContent = `${fmt(REF.benign.p05)}–${fmt(REF.benign.p95)} bits`;
+document.getElementById("bandd").textContent = `${fmt(REF.dga.p05)}–${fmt(REF.dga.p95)} bits`;
+
+const SMIN = 2.0, SMAX = 4.8;
+const sx = v => ((Math.min(Math.max(v, SMIN), SMAX) - SMIN) / (SMAX - SMIN)) * 100;
+
+function renderStrip(h) {
+  const marker = h == null ? "" : `
+    <line x1="${sx(h)}" y1="9" x2="${sx(h)}" y2="27" stroke="var(--ink)" stroke-width="0.45" />
+    <circle cx="${sx(h)}" cy="18" r="1.6" fill="var(--ink)" stroke="var(--surface)" stroke-width="0.5"/>`;
+  document.getElementById("strip").innerHTML = `
+  <svg viewBox="0 0 100 40" role="img" aria-label="Escala de entropia com faixas de referência benigna e DGA">
+    <line x1="0" y1="18" x2="100" y2="18" stroke="var(--baseline)" stroke-width="0.35"/>
+    <rect x="${sx(REF.benign.p05)}" y="11" width="${sx(REF.benign.p95) - sx(REF.benign.p05)}" height="14" rx="2"
+          fill="var(--accent)" opacity="0.2"/>
+    <rect x="${sx(REF.dga.p05)}" y="11" width="${sx(REF.dga.p95) - sx(REF.dga.p05)}" height="14" rx="2"
+          fill="var(--critical)" opacity="0.22"/>
+    <text x="${(sx(REF.benign.p05)+sx(REF.benign.p95))/2}" y="8.5" font-size="3.2" text-anchor="middle"
+          fill="var(--accent)" font-family="var(--mono)" font-weight="600">benignos</text>
+    <text x="${(sx(REF.dga.p05)+sx(REF.dga.p95))/2}" y="8.5" font-size="3.2" text-anchor="middle"
+          fill="var(--critical)" font-family="var(--mono)" font-weight="600">DGA</text>
+    ${[2.0,2.5,3.0,3.5,4.0,4.5].map(t =>
+      `<text x="${Math.max(2.4, Math.min(97.6, sx(t)))}" y="36" font-size="2.8" text-anchor="middle" fill="var(--muted)" font-family="var(--mono)">${fmt(t,1)}</text>
+       <line x1="${sx(t)}" y1="25" x2="${sx(t)}" y2="27.5" stroke="var(--baseline)" stroke-width="0.3"/>`).join("")}
+    ${marker}
+  </svg>`;
+}
+
+const verdict = document.getElementById("verdict");
+const vtext = document.getElementById("vtext");
+function updateDemo() {
+  const raw = document.getElementById("dom").value.trim().toLowerCase().replace(/\s+/g, "");
+  const h = raw ? shannon(raw) : null;
+  document.getElementById("hval").textContent = h == null ? "—" : fmt(h);
+  renderStrip(h);
+  verdict.className = "verdict mid";
+  if (h == null) { vtext.textContent = "digite um domínio…"; return; }
+  if (raw.length < 6) {
+    vtext.textContent = "string curta — a entropia satura em log₂(n)";
+  } else if (h <= REF.benign.p95) {
+    verdict.className = "verdict ok";
+    vtext.textContent = "perfil compatível com domínio legítimo";
+  } else if (h >= REF.dga.p05) {
+    verdict.className = "verdict bad";
+    vtext.textContent = "alta entropia — perfil típico de DGA";
+  } else {
+    vtext.textContent = "zona ambígua — entre as duas faixas";
+  }
+}
+document.getElementById("dom").addEventListener("input", updateDemo);
+document.querySelectorAll(".chips button").forEach(b =>
+  b.addEventListener("click", () => { document.getElementById("dom").value = b.dataset.d; updateDemo(); }));
+updateDemo();
+
+/* ---------- gráficos de barras ---------- */
+(function () {
+  const max = Math.max(...Object.values(DATA.classes));
+  document.getElementById("classChart").innerHTML = CLASS_ORDER.map(c => {
+    const v = DATA.classes[c], w = (v / max) * 100;
+    const inside = w > 38;
+    return `<div class="bar-row" data-tip="${CLASS_PT[c]}: <b>${fmtInt(v)}</b> fluxos (${fmt(100*v/DATA.n_flows,1)}%)">
+      <div class="name">${CLASS_PT[c]}</div>
+      <div class="bar-track axis-line">
+        <div class="bar-fill" style="width:${w}%; background:${cvar(c)}"></div>
+        <div class="bar-val" style="${inside ? `right:${100-w}%; padding-right:8px; color:#fff` : `left:${w}%; padding-left:8px`}">${fmtInt(v)}</div>
+      </div>
+    </div>`;
+  }).join("");
+})();
+
+(function () {
+  const vals = DATA.port_entropy, max = 11;
+  document.getElementById("portChart").innerHTML = CLASS_ORDER.map(c => {
+    const v = vals[c], w = Math.max((v / max) * 100, 0.4);
+    return `<div class="bar-row" data-tip="${CLASS_PT[c]}: <b>${fmt(v,3)}</b> bits de entropia de portas">
+      <div class="name">${CLASS_PT[c]}</div>
+      <div class="bar-track axis-line">
+        <div class="bar-fill" style="width:${w}%; background:${cvar(c)}"></div>
+        <div class="bar-val" style="left:${w}%; padding-left:8px">${fmt(v,1)} bits</div>
+      </div>
+    </div>`;
+  }).join("");
+  document.getElementById("portTable").innerHTML = CLASS_ORDER.map(c =>
+    `<tr><td>${CLASS_PT[c]}</td><td>${fmt(vals[c],3)}</td></tr>`).join("");
+})();
+
+(function () {
+  const D = DATA.domain_entropy, lo = 2.8, hi = 4.3;
+  const px = v => ((v - lo) / (hi - lo)) * 100;
+  document.getElementById("domChart").innerHTML = CLASS_ORDER.map(c => {
+    const d = D[c];
+    return `<div class="iv-row" data-tip="${CLASS_PT[c]} — média <b>${fmt(d.mean,3)}</b>, quartis ${fmt(d.q1,2)}–${fmt(d.q3,2)} bits">
+      <div class="name">${CLASS_PT[c]}</div>
+      <div class="iv-track axis-line">
+        <div class="iv-band" style="left:${px(d.q1)}%; width:${px(d.q3)-px(d.q1)}%; background:${cvar(c)}"></div>
+        <div class="iv-dot" style="left:${px(d.mean)}%; background:${cvar(c)}"></div>
+        <div class="iv-val" style="left:${px(d.q3)}%; padding-left:12px">${fmt(d.mean)}</div>
+      </div>
+    </div>`;
+  }).join("") + `
+    <div class="scale-ticks"><div></div><div class="t">
+      ${[2.8,3.1,3.4,3.7,4.0,4.3].map(t => `<span style="left:${px(t)}%">${fmt(t,1)}</span>`).join("")}
+    </div></div>`;
+  document.getElementById("domTable").innerHTML = CLASS_ORDER.map(c =>
+    `<tr><td>${CLASS_PT[c]}</td><td>${fmt(D[c].mean,3)}</td><td>${fmt(D[c].q1,2)}–${fmt(D[c].q3,2)}</td></tr>`).join("");
+})();
+
+(function () {
+  const MI = DATA.mutual_information;
+  const names = Object.keys(MI), max = Math.max(...Object.values(MI));
+  document.getElementById("miChart").innerHTML = names.map(n => {
+    const v = MI[n], w = (v / (max * 1.12)) * 100;
+    return `<div class="bar-row" data-tip="<b>${n}</b>: I = ${fmt(v,4)} bits">
+      <div class="name">${n}</div>
+      <div class="bar-track axis-line">
+        <div class="bar-fill" style="width:${w}%; background:var(--accent-dim)"></div>
+        <div class="bar-val" style="left:${w}%; padding-left:8px">${fmt(v,3)}</div>
+      </div>
+    </div>`;
+  }).join("");
+  document.getElementById("miTable").innerHTML = names.map(n =>
+    `<tr><td style="font-family:var(--mono)">${n}</td><td>${fmt(MI[n],4)}</td></tr>`).join("");
+})();
+
+/* ---------- PCA scatter ---------- */
+(function () {
+  const all = DATA.pca_points;
+  const v1 = DATA.pca_variance[0], v2 = DATA.pca_variance[1];
+
+  const q = (arr, p) => {
+    const s = [...arr].sort((a, b) => a - b);
+    return s[Math.round(p * (s.length - 1))];
+  };
+  const axs = all.map(p => p[0]), ays = all.map(p => p[1]);
+  const xmin = q(axs, 0.005), xmax = q(axs, 0.995);
+  const ymin = q(ays, 0.005), ymax = q(ays, 0.995);
+  const pts = all.filter(p => p[0] >= xmin && p[0] <= xmax && p[1] >= ymin && p[1] <= ymax);
+  const omitted = all.length - pts.length;
+
+  document.getElementById("pcaSub").textContent =
+    `passo 5 · amostra estratificada de ${fmtInt(pts.length)} fluxos — PC1 explica ${fmt(v1*100,1)}%, PC2 ${fmt(v2*100,1)}% · eixos nos percentis 0,5–99,5 (${omitted} extremos omitidos)`;
+
+  document.getElementById("pcaLegend").innerHTML = CLASS_ORDER.map(c =>
+    `<span><i style="background:${cvar(c)}"></i>${CLASS_PT[c]}</span>`).join("");
+
+  const W = 100, H = 62, m = { l: 7, r: 2, t: 2, b: 7 };
+  const X = v => m.l + ((v - xmin) / (xmax - xmin)) * (W - m.l - m.r);
+  const Y = v => H - m.b - ((v - ymin) / (ymax - ymin)) * (H - m.t - m.b);
+
+  function ticks(lo, hi) {
+    const span = hi - lo;
+    const step = [0.5, 1, 2, 5, 10].find(s => span / s <= 7) || 10;
+    const out = [];
+    for (let t = Math.ceil(lo / step) * step; t <= hi; t += step)
+      out.push(Math.round(t * 10) / 10);
+    return out;
+  }
+  const gx = ticks(xmin, xmax), gy = ticks(ymin, ymax);
+
+  const ordered = pts.slice().sort((a, b) =>
+    (a[2] === "benign" ? 0 : 1) - (b[2] === "benign" ? 0 : 1));
+
+  const dots = ordered.map(p =>
+    `<circle cx="${X(p[0]).toFixed(1)}" cy="${Y(p[1]).toFixed(1)}" r="0.62"
+       fill="${cvar(p[2])}" fill-opacity="${p[2] === "benign" ? 0.4 : 0.85}"
+       data-c="${p[2]}" data-x="${p[0]}" data-y="${p[1]}"/>`).join("");
+
+  document.getElementById("scatter").innerHTML = `
+  <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Dispersão dos dois primeiros componentes principais, colorida por classe">
+    ${gx.map(t => `<line x1="${X(t)}" y1="${m.t}" x2="${X(t)}" y2="${H-m.b}" stroke="var(--grid)" stroke-width="0.12"/>`).join("")}
+    ${gy.map(t => `<line x1="${m.l}" y1="${Y(t)}" x2="${W-m.r}" y2="${Y(t)}" stroke="var(--grid)" stroke-width="0.12"/>`).join("")}
+    <line x1="${m.l}" y1="${H-m.b}" x2="${W-m.r}" y2="${H-m.b}" stroke="var(--baseline)" stroke-width="0.2"/>
+    <line x1="${m.l}" y1="${m.t}" x2="${m.l}" y2="${H-m.b}" stroke="var(--baseline)" stroke-width="0.2"/>
+    ${gx.map(t => `<text x="${X(t)}" y="${H-m.b+3.2}" font-size="2.1" text-anchor="middle" fill="var(--muted)" font-family="var(--mono)">${t}</text>`).join("")}
+    ${gy.map(t => `<text x="${m.l-1.6}" y="${Y(t)+0.8}" font-size="2.1" text-anchor="end" fill="var(--muted)" font-family="var(--mono)">${t}</text>`).join("")}
+    <text x="${(W+m.l)/2}" y="${H-0.6}" font-size="2.3" text-anchor="middle" fill="var(--muted)" font-family="var(--sans)">PC1 (${fmt(v1*100,0)}% da variância)</text>
+    <text x="2.4" y="${(H-m.b)/2}" font-size="2.3" text-anchor="middle" fill="var(--muted)" font-family="var(--sans)" transform="rotate(-90 2.4 ${(H-m.b)/2})">PC2 (${fmt(v2*100,0)}%)</text>
+    <g id="dots">${dots}</g>
+  </svg>`;
+
+  const svg = document.querySelector("#scatter svg");
+  svg.addEventListener("pointermove", ev => {
+    const t = ev.target;
+    if (t.tagName === "circle") {
+      showTip(ev, `${CLASS_PT[t.dataset.c]}<br>PC1 <b>${fmt(+t.dataset.x)}</b> · PC2 <b>${fmt(+t.dataset.y)}</b>`);
+    } else hideTip();
+  });
+  svg.addEventListener("pointerleave", hideTip);
+})();
+
+/* ---------- recall por classe ---------- */
+(function () {
+  const R = DATA.recall_by_class;
+  const order = ["port_scan", "ddos", "data_exfil", "dga_c2"];
+  document.getElementById("recallChart").innerHTML = order.map(c => {
+    const v = R[c], w = v * 100;
+    const inside = w > 40;
+    return `<div class="bar-row" data-tip="${CLASS_PT[c]}: <b>${fmt(w,1)}%</b> dos fluxos capturados">
+      <div class="name">${CLASS_PT[c]}</div>
+      <div class="bar-track axis-line">
+        <div class="bar-fill" style="width:${w}%; background:${cvar(c)}"></div>
+        <div class="bar-val" style="${inside ? `right:${100-w}%; padding-right:8px; color:#fff` : `left:${w}%; padding-left:8px`}">${fmt(w,0)}%</div>
+      </div>
+    </div>`;
+  }).join("");
+})();
+
+/* ---------- tooltips das barras ---------- */
+document.querySelectorAll("[data-tip]").forEach(el => {
+  el.addEventListener("pointermove", ev => showTip(ev, el.dataset.tip));
+  el.addEventListener("pointerleave", hideTip);
+});
+
+/* ================================================================
+   O CÉREBRO — simulador de aprendizagem federada descentralizada
+   (NEBULA-like: eventos assíncronos, reputação, expulsão de nós)
+   ================================================================ */
+(function () {
+  const cv = document.getElementById("brain");
+  const ctx = cv.getContext("2d");
+  const DPR = Math.min(devicePixelRatio || 1, 2);
+  const N = 22, ROUND_MS = 2400;
+  const COL = {
+    ok: "#4cc9d4", okDim: "rgba(76,201,212,", bad: "#e66767",
+    badDim: "rgba(230,103,103,", out: "#3a4655",
+    edge: "rgba(76,201,212,0.16)", edgeHi: "rgba(76,201,212,0.45)",
+  };
+  let S = null, hoverN = -1, lastRoundAt = 0, phase = 0;
+
+  function size() {
+    cv.width = cv.offsetWidth * DPR;
+    cv.height = cv.offsetHeight * DPR;
+  }
+
+  function build(topo) {
+    size();
+    const W = cv.width, H = cv.height;
+    const cx = W / 2, cy = H / 2, R = Math.min(W, H) * 0.38;
+    const nodes = [], edges = [];
+    const star = topo === "estrela";
+    for (let i = 0; i < N; i++) {
+      let x, y;
+      if (star && i === 0) { x = cx; y = cy; }
+      else {
+        const idx = star ? i - 1 : i, count = star ? N - 1 : N;
+        const a = (idx / count) * Math.PI * 2 - Math.PI / 2;
+        const rr = R * (topo === "malha" ? (0.62 + 0.38 * ((i * 2654435761) % 100) / 100) : 1);
+        x = cx + Math.cos(a) * rr; y = cy + Math.sin(a) * rr;
+      }
+      nodes.push({ x, y, rep: 100, poisoned: false, active: true, glow: 0, ph: Math.random() * 6.28 });
+    }
+    const add = (a, b) => { if (a !== b && !edges.some(e => (e.a === a && e.b === b) || (e.a === b && e.b === a))) edges.push({ a, b }); };
+    if (topo === "anel") for (let i = 0; i < N; i++) add(i, (i + 1) % N);
+    else if (star) for (let i = 1; i < N; i++) add(0, i);
+    else {
+      for (let i = 0; i < N; i++) { add(i, (i + 1) % N); add(i, (i + 2) % N); }
+      let seed = 42;
+      const rnd = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
+      for (let k = 0; k < 7; k++) add(Math.floor(rnd() * N), Math.floor(rnd() * N));
+    }
+    S = { topo, nodes, edges, round: 0, acc: 52, pulses: [], flash: null };
+    logLine("le-node", "federação inicializada — topologia " + topo + ", " + N + " nós");
+    stats();
+  }
+
+  const logBox = document.getElementById("brainLog");
+  function logLine(cls, msg) {
+    const r = S ? S.round : 0;
+    logBox.insertAdjacentHTML("afterbegin",
+      `<div><span class="le-t">[r${String(r).padStart(2, "0")}]</span> <span class="${cls}">${
+        cls === "le-node" ? "NodeEvent" : cls === "le-msg" ? "MessageEvent" : "AddonEvent"
+      }</span> · ${msg}</div>`);
+    while (logBox.children.length > 24) logBox.lastChild.remove();
+  }
+
+  function stats() {
+    const act = S.nodes.filter(n => n.active);
+    document.getElementById("stRound").textContent = S.round;
+    document.getElementById("stNodes").textContent = act.length + "/" + N;
+    document.getElementById("stEdges").textContent = S.edges.length;
+    document.getElementById("stRep").textContent =
+      Math.round(act.reduce((s, n) => s + n.rep, 0) / Math.max(act.length, 1));
+    document.getElementById("stAcc").textContent = fmt(S.acc, 1) + "%";
+    document.getElementById("accFill").style.width = S.acc + "%";
+    document.getElementById("accFill").style.background =
+      S.nodes.some(n => n.poisoned && n.active) ? COL.bad : "var(--accent)";
+  }
+
+  function doRound() {
+    S.round++;
+    const act = i => S.nodes[i].active;
+    // treino local (NodeEvent) — brilho
+    for (const n of S.nodes) if (n.active) n.glow = 1;
+    if (S.round % 4 === 1) logLine("le-node", "ronda de treino local concluída nos nós ativos");
+    // pulsos de agregação (MessageEvent)
+    if (!REDUCED) for (const e of S.edges) {
+      if (!act(e.a) || !act(e.b)) continue;
+      const flip = Math.random() < 0.5;
+      S.pulses.push({ a: flip ? e.a : e.b, b: flip ? e.b : e.a, t: 0,
+        bad: S.nodes[flip ? e.a : e.b].poisoned });
+    }
+    // acurácia do modelo global
+    const poisonedActive = S.nodes.filter(n => n.poisoned && n.active).length;
+    if (poisonedActive) {
+      S.acc = Math.max(35, S.acc - 5.5 * poisonedActive + (97 - S.acc) * 0.06);
+    } else {
+      S.acc = S.acc + (97 - S.acc) * 0.22;
+    }
+    // reputação: a federação audita os vizinhos
+    S.nodes.forEach((n, i) => {
+      if (!n.active) return;
+      if (n.poisoned) {
+        n.rep = Math.max(0, n.rep - 13);
+        if (n.rep <= 40) {
+          n.active = false;
+          S.edges = S.edges.filter(e => e.a !== i && e.b !== i);
+          logLine("le-addon", `nó ${String(i).padStart(2, "0")} EXPULSO da federação (reputação ${Math.round(n.rep)})`);
+          logLine("le-node", "agregação retomada sem o nó malicioso — modelo recuperando");
+        }
+      } else n.rep = Math.min(100, n.rep + 2);
+    });
+    stats();
+  }
+
+  /* ---------- ações ---------- */
+  function poison(i) {
+    if (i == null) {
+      const c = S.nodes.map((n, j) => j).filter(j => S.nodes[j].active && !S.nodes[j].poisoned);
+      if (!c.length) return;
+      i = c[Math.floor(Math.random() * c.length)];
+    }
+    const n = S.nodes[i];
+    if (!n.active) return;
+    if (n.poisoned) { n.poisoned = false; n.rep = 70; logLine("le-node", `nó ${String(i).padStart(2,"0")} saneado manualmente`); }
+    else { n.poisoned = true; logLine("le-addon", `injeção adversarial no nó ${String(i).padStart(2,"0")} (model poisoning)`); }
+    stats();
+  }
+  function cut() {
+    if (!S.edges.length) return;
+    const k = Math.floor(Math.random() * S.edges.length);
+    const e = S.edges[k];
+    S.flash = { ...e, t: 1 };
+    S.edges.splice(k, 1);
+    logLine("le-msg", `ligação ${String(e.a).padStart(2,"0")}↔${String(e.b).padStart(2,"0")} cortada — nós sobreviventes seguem treinando`);
+    stats();
+  }
+  document.getElementById("btnPoison").addEventListener("click", () => poison(null));
+  document.getElementById("btnCut").addEventListener("click", cut);
+  document.getElementById("btnReset").addEventListener("click", () => { logBox.innerHTML = ""; build(S.topo); });
+  document.querySelectorAll(".seg button").forEach(b =>
+    b.addEventListener("click", () => {
+      document.querySelectorAll(".seg button").forEach(x => x.classList.remove("on"));
+      b.classList.add("on");
+      logBox.innerHTML = "";
+      build(b.dataset.topo);
+    }));
+
+  /* ---------- interação com neurônios ---------- */
+  function nodeAt(ev) {
+    const r = cv.getBoundingClientRect();
+    const x = (ev.clientX - r.left) * DPR, y = (ev.clientY - r.top) * DPR;
+    let best = -1, bd = 22 * DPR;
+    S.nodes.forEach((n, i) => {
+      const d = Math.hypot(n.x - x, n.y - y);
+      if (d < bd) { bd = d; best = i; }
+    });
+    return best;
+  }
+  cv.addEventListener("pointermove", ev => {
+    hoverN = nodeAt(ev);
+    if (hoverN >= 0) {
+      const n = S.nodes[hoverN];
+      showTip(ev, `nó <b>${String(hoverN).padStart(2, "0")}</b> · ${
+        !n.active ? "expulso" : n.poisoned ? "⚠ envenenado" : "saudável"
+      }<br>reputação <b>${Math.round(n.rep)}</b> — clique para ${n.poisoned ? "sanear" : "envenenar"}`);
+    } else hideTip();
+  });
+  cv.addEventListener("pointerleave", () => { hoverN = -1; hideTip(); });
+  cv.addEventListener("click", ev => { const i = nodeAt(ev); if (i >= 0) poison(i); });
+
+  /* ---------- desenho ---------- */
+  function draw(t) {
+    const W = cv.width, H = cv.height;
+    ctx.clearRect(0, 0, W, H);
+    phase = t / 1000;
+    // ligações
+    for (const e of S.edges) {
+      const A = S.nodes[e.a], B = S.nodes[e.b];
+      const hi = hoverN === e.a || hoverN === e.b;
+      ctx.strokeStyle = hi ? COL.edgeHi : COL.edge;
+      ctx.lineWidth = (hi ? 1.6 : 1) * DPR;
+      ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(B.x, B.y); ctx.stroke();
+    }
+    // corte em flash
+    if (S.flash && S.flash.t > 0) {
+      const A = S.nodes[S.flash.a], B = S.nodes[S.flash.b];
+      ctx.strokeStyle = COL.badDim + S.flash.t + ")";
+      ctx.lineWidth = 2 * DPR; ctx.setLineDash([6 * DPR, 5 * DPR]);
+      ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(B.x, B.y); ctx.stroke();
+      ctx.setLineDash([]);
+      S.flash.t -= 0.02;
+    }
+    // pulsos
+    S.pulses = S.pulses.filter(p => p.t < 1);
+    for (const p of S.pulses) {
+      p.t += 0.022;
+      const A = S.nodes[p.a], B = S.nodes[p.b];
+      const x = A.x + (B.x - A.x) * p.t, y = A.y + (B.y - A.y) * p.t;
+      ctx.beginPath(); ctx.arc(x, y, 2.2 * DPR, 0, 6.29);
+      ctx.fillStyle = p.bad ? COL.bad : COL.ok;
+      ctx.fill();
+    }
+    // neurônios
+    S.nodes.forEach((n, i) => {
+      const base = (S.topo === "estrela" && i === 0 ? 8.5 : 6) * DPR;
+      const breathe = REDUCED ? 0 : Math.sin(phase * 1.6 + n.ph) * 0.6 * DPR;
+      const r = base + breathe + n.glow * 2.5 * DPR;
+      if (n.glow > 0) n.glow = Math.max(0, n.glow - 0.02);
+      // halo
+      if (n.active) {
+        ctx.beginPath(); ctx.arc(n.x, n.y, r + 6 * DPR, 0, 6.29);
+        ctx.fillStyle = (n.poisoned ? COL.badDim : COL.okDim) + (0.10 + n.glow * 0.25) + ")";
+        ctx.fill();
+      }
+      // corpo
+      ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, 6.29);
+      ctx.fillStyle = !n.active ? COL.out : n.poisoned ? COL.bad : COL.ok;
+      ctx.globalAlpha = n.active ? 1 : 0.55;
+      ctx.fill(); ctx.globalAlpha = 1;
+      // anel de reputação
+      if (n.active) {
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, r + 3 * DPR, -Math.PI / 2, -Math.PI / 2 + (n.rep / 100) * 6.283);
+        ctx.strokeStyle = n.poisoned ? COL.bad : "rgba(232,238,246,0.35)";
+        ctx.lineWidth = 1.2 * DPR; ctx.stroke();
+      }
+      if (hoverN === i && n.active) {
+        ctx.beginPath(); ctx.arc(n.x, n.y, r + 5.5 * DPR, 0, 6.29);
+        ctx.strokeStyle = "#e8eef6"; ctx.lineWidth = 1 * DPR; ctx.stroke();
+      }
+    });
+  }
+
+  function loop(t) {
+    if (t - lastRoundAt >= ROUND_MS) { lastRoundAt = t; doRound(); }
+    draw(t);
+    requestAnimationFrame(loop);
+  }
+
+  build("malha");
+  addEventListener("resize", () => { const topo = S.topo; build(topo); });
+  if (REDUCED) {
+    draw(0);
+    setInterval(() => { doRound(); draw(0); }, ROUND_MS);
+  } else requestAnimationFrame(loop);
+})();
+</script>
+
+</body>
+</html>

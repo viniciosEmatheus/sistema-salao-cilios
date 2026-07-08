@@ -17,6 +17,25 @@ e realista de fluxos de rede. Quando quiser, é só plugar o dataset real
 
 ---
 
+## 🌐 Site interativo
+
+O dossiê completo do projeto — contexto, metodologia passo a passo, resultados
+e um **cérebro NEBULA simulado** (federação de nós interativa: troque a
+topologia, envenene neurônios e veja a reputação expulsá-los) — vive em
+[`site/index.html`](site/index.html).
+
+É 100% estático (HTML+CSS+JS num único arquivo, dados reais embutidos):
+
+```bash
+# ver localmente
+python -m http.server -d site 8000   # http://localhost:8000
+```
+
+**Deploy no Render**: o [`render.yaml`](render.yaml) já configura tudo —
+*New → Blueprint* apontando para este repositório, ou *New → Static Site*
+com `Publish Directory = site` e build command vazio.
+
+
 ## ✨ Por que segurança de redes + teoria da informação?
 
 Segurança de redes é um dos domínios onde a teoria da informação e a
