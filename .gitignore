@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+
+# Testes / cobertura
+.pytest_cache/
+.coverage
+htmlcov/
+.ruff_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Datasets (baixados localmente — ver data/README.md)
+data/*.txt
+data/*.csv
+data/*.arff
+data/*.zip
+!data/.gitkeep
+
+# Figuras/relatórios gerados
+reports/*.png
+reports/*.pdf
+!reports/.gitkeep
+
+# SO / editores
+.DS_Store
+.idea/
+.vscode/
