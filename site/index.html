@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>cyber-data-lab — dossiê: da teoria à detecção</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="cyber-data-lab — um radar de segurança que aprende o normal da sua rede e acusa o anormal: o que é, para quem, planos, resultados e conformidade.">
+<meta name="description" content="cyber-data-lab — um radar de segurança que aprende o normal da sua rede e acusa o anormal, com um cérebro de cenários de ataque interativos.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛡️</text></svg>">
 </head>
 <body>
@@ -348,6 +348,56 @@
   .brain-log .le-msg { color: var(--s1); }
   .brain-log .le-addon { color: var(--critical); }
   .brain-log .le-t { color: var(--muted); }
+
+  /* ---- cenários reais ---- */
+  .scen-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .scen-label { font-family: var(--mono); font-size: 12px; letter-spacing: .06em; color: var(--accent); }
+  .scen-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(215px, 1fr)); gap: 10px; margin-bottom: 16px; }
+  .scen {
+    text-align: left; cursor: pointer; background: var(--page);
+    border: 1px solid var(--baseline); border-radius: 10px; padding: 13px 15px;
+    display: flex; flex-direction: column; gap: 4px; transition: border-color .15s, transform .1s, background .15s;
+  }
+  .scen:hover { border-color: var(--accent); transform: translateY(-2px); background: var(--surface); }
+  .scen:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .scen.running { border-color: var(--accent); background: var(--accent-wash); }
+  .scen.dim { opacity: .4; pointer-events: none; }
+  .scen .ic { font-size: 20px; line-height: 1; }
+  .scen b { font-size: 14px; color: var(--ink); }
+  .scen small { font-size: 12px; color: var(--ink-2); line-height: 1.4; }
+  .act.stop { border-color: var(--critical); color: var(--critical); }
+  .act.stop:hover { background: var(--critical-wash); }
+
+  /* ---- banner narrativo ---- */
+  .story {
+    background: linear-gradient(90deg, var(--accent-wash), transparent);
+    border: 1px solid var(--accent-dim); border-left: 3px solid var(--accent);
+    border-radius: 0 10px 10px 0; padding: 14px 18px; margin-bottom: 16px;
+  }
+  .story-top { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .story-ic { font-size: 18px; }
+  .story-name { font-family: var(--mono); font-size: 13px; color: var(--accent); font-weight: 600; }
+  .story-step { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-left: auto; }
+  .story-text { font-size: 14.5px; color: var(--ink); line-height: 1.5; min-height: 1.5em; }
+  .story-text b { color: var(--accent); }
+
+  /* ---- toggle defesa ---- */
+  .toggle {
+    display: inline-flex; align-items: center; gap: 9px; cursor: pointer;
+    font-family: var(--mono); font-size: 12.5px; color: var(--ink-2);
+    border: 1px solid var(--baseline); border-radius: 8px; padding: 6px 13px; background: transparent;
+  }
+  .toggle .sw { width: 30px; height: 17px; border-radius: 99px; background: var(--baseline); position: relative; transition: background .18s; flex: none; }
+  .toggle .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 13px; height: 13px; border-radius: 50%; background: var(--muted); transition: transform .18s, background .18s; }
+  .toggle.on { color: var(--accent); border-color: var(--accent-dim); }
+  .toggle.on .sw { background: var(--accent-dim); }
+  .toggle.on .sw::after { transform: translateX(13px); background: var(--accent); }
+  .toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .bs .v.threat { font-size: 14px; padding-top: 4px; }
+  .bs .v.threat.calm { color: var(--accent); }
+  .bs .v.threat.elev { color: var(--warn, #e0a33e); }
+  .bs .v.threat.crit { color: var(--critical); }
 
   .act.warn { border-color: rgba(224,163,62,.5); color: #e0a33e; }
   .act.warn:hover { border-color: #e0a33e; background: rgba(224,163,62,.1); }
@@ -750,33 +800,84 @@
   </div>
 
   <div class="brain-panel">
+    <div class="scen-head">
+      <span class="scen-label">▶ cenários reais — clique e assista a federação reagir</span>
+      <button id="btnStop" class="act stop" hidden>■ parar cenário</button>
+    </div>
+    <div class="scen-grid" id="scenGrid">
+      <button class="scen" data-scen="sybil">
+        <span class="ic">🎭</span>
+        <b>Ataque coordenado</b>
+        <small>Um adversário compromete 4 dispositivos de uma vez para votar em bloco. A maioria honesta aguenta?</small>
+      </button>
+      <button class="scen" data-scen="ransomware">
+        <span class="ic">🦠</span>
+        <b>Surto de ransomware</b>
+        <small>Uma máquina é infectada e o malware tenta pular de vizinho em vizinho a cada rodada.</small>
+      </button>
+      <button class="scen" data-scen="partition">
+        <span class="ic">🔌</span>
+        <b>Cabo de fibra rompido</b>
+        <small>A rede se parte em duas ilhas. Sem servidor central, os dois lados continuam funcionando.</small>
+      </button>
+      <button class="scen" data-scen="insider">
+        <span class="ic">🕵️</span>
+        <b>Insider lento (low &amp; slow)</b>
+        <small>Um sabotador interno age devagar para driblar o alarme — o desafio mais real.</small>
+      </button>
+      <button class="scen" data-scen="nodefense">
+        <span class="ic">💥</span>
+        <b>E se não houvesse defesa?</b>
+        <small>Compare lado a lado: o mesmo ataque com a auditoria desligada e depois religada.</small>
+      </button>
+      <button class="scen" data-scen="ddos">
+        <span class="ic">🌊</span>
+        <b>Sobrecarga em massa</b>
+        <small>Metade da federação cai sob ataque simultâneo — e se reergue sozinha.</small>
+      </button>
+    </div>
+
+    <div class="story" id="story" hidden>
+      <div class="story-top">
+        <span class="story-ic" id="storyIc"></span>
+        <span class="story-name" id="storyName"></span>
+        <span class="story-step" id="storyStep"></span>
+      </div>
+      <div class="story-text" id="storyText"></div>
+    </div>
+
     <div class="brain-controls">
       <div class="seg" role="group" aria-label="Topologia da federação">
         <button data-topo="malha" class="on">malha</button><button data-topo="anel">anel</button><button data-topo="estrela">estrela</button>
       </div>
+      <button id="defToggle" class="toggle on" role="switch" aria-checked="true">
+        <span class="sw"></span> defesa automática
+      </button>
       <div class="btns">
-        <button id="btnPoison" class="act bad">⚡ envenenar nó</button>
-        <button id="btnHeal" class="act warn">💊 sanear nó</button>
+        <button id="btnPoison" class="act bad">⚡ envenenar</button>
+        <button id="btnHeal" class="act warn">💊 sanear</button>
         <button id="btnCut" class="act">✂ cortar ligação</button>
         <button id="btnReset" class="act">↻ reiniciar</button>
       </div>
     </div>
-    <canvas id="brain" aria-label="Simulação interativa de uma federação de nós de aprendizagem"></canvas>
+
+    <canvas id="brain" aria-label="Simulação interativa de uma federação de dispositivos de aprendizagem"></canvas>
     <div class="brain-legend">
       <span><i style="background:#4cc9d4"></i>saudável</span>
       <span><i style="background:#e0a33e"></i>em observação</span>
-      <span><i style="background:#e66767"></i>envenenado</span>
-      <span><i class="hollow"></i>expulso</span>
-      <span><i class="pdot"></i>pulso = pesos do modelo</span>
+      <span><i style="background:#e66767"></i>comprometido</span>
+      <span><i class="hollow"></i>isolado</span>
+      <span><i class="pdot"></i>pulso = aprendizado (nunca dados)</span>
     </div>
-    <div class="brain-hint">clique num neurônio: saudável → envenena · envenenado → cura · expulso → readmite</div>
+    <div class="brain-hint">cada nó é um dispositivo real — passe o mouse para ver quem é; clique para envenenar, curar ou readmitir</div>
+
     <div class="brain-stats">
       <div class="bs"><span class="k">rodada</span><span class="v" id="stRound">0</span></div>
-      <div class="bs"><span class="k">nós ativos</span><span class="v" id="stNodes">—</span></div>
-      <div class="bs"><span class="k">ligações</span><span class="v" id="stEdges">—</span></div>
-      <div class="bs"><span class="k">reputação média</span><span class="v" id="stRep">—</span></div>
+      <div class="bs"><span class="k">dispositivos ativos</span><span class="v" id="stNodes">—</span></div>
+      <div class="bs"><span class="k">comprometidos</span><span class="v" id="stThreatN">0</span></div>
+      <div class="bs"><span class="k">nível de ameaça</span><span class="v threat" id="stThreat">calmo</span></div>
       <div class="bs wide">
-        <span class="k">acurácia do modelo global</span>
+        <span class="k">saúde do modelo global</span>
         <span class="v" id="stAcc">—</span>
         <div class="accbar"><div id="accFill"></div></div>
       </div>
@@ -1434,72 +1535,95 @@ document.querySelectorAll("[data-tip]").forEach(el => {
 });
 
 /* ================================================================
-   O CÉREBRO — simulador de aprendizagem federada descentralizada
-   (NEBULA-like: eventos assíncronos, reputação, expulsão e cura)
+   O CÉREBRO — playground de aprendizagem federada descentralizada
+   (NEBULA-like): dispositivos reais, cenários de ataque, auditoria
+   de reputação, propagação de infecção, partição de rede e cura.
    ================================================================ */
 (function () {
   const cv = document.getElementById("brain");
+  if (!cv) return;
   const ctx = cv.getContext("2d");
   const DPR = Math.min(devicePixelRatio || 1, 2);
-  const N = 22, ROUND_MS = 2400;
+  const N = 22, ROUND_MS = 2400, DECAY = 13, EXPEL = 40;
   const C = {
     ok: "#4cc9d4", warn: "#e0a33e", bad: "#e66767", out: "#4a5768",
-    okA: a => `rgba(76,201,212,${a})`,
-    badA: a => `rgba(230,103,103,${a})`,
+    okA: a => `rgba(76,201,212,${a})`, badA: a => `rgba(230,103,103,${a})`,
     warnA: a => `rgba(224,163,62,${a})`,
     edge: "rgba(76,201,212,0.15)", edgeHi: "rgba(76,201,212,0.5)",
     dormant: "rgba(100,118,138,0.18)",
   };
-  let S = null, hoverN = -1, lastRoundAt = 0, phase = 0;
+  const ROLES = [
+    { e: "🏥", n: "Hospital" }, { e: "🏦", n: "Banco" }, { e: "📡", n: "Sensor IoT" },
+    { e: "🖥️", n: "Servidor" }, { e: "🏭", n: "Fábrica" }, { e: "📱", n: "Dispositivo" },
+    { e: "🛰️", n: "Radar" }, { e: "🏢", n: "Escritório" },
+  ];
   const pad2 = i => String(i).padStart(2, "0");
+  let S = null, hoverN = -1, lastRoundAt = 0, phase = 0;
 
   function size() { cv.width = cv.offsetWidth * DPR; cv.height = cv.offsetHeight * DPR; }
 
+  function nodePos(i, topo) {
+    const W = cv.width, H = cv.height, cx = W / 2, cy = H / 2, R = Math.min(W, H) * 0.38;
+    const star = topo === "estrela";
+    if (star && i === 0) return { x: cx, y: cy };
+    const idx = star ? i - 1 : i, count = star ? N - 1 : N;
+    const a = (idx / count) * Math.PI * 2 - Math.PI / 2;
+    const rr = R * (topo === "malha" ? (0.62 + 0.38 * ((i * 2654435761) % 100) / 100) : 1);
+    return { x: cx + Math.cos(a) * rr, y: cy + Math.sin(a) * rr };
+  }
+  // Reposiciona os nós sem tocar no estado (para resize sem apagar o cenário).
+  function relayout() {
+    if (!S) return;
+    size();
+    S.nodes.forEach((n, i) => { const p = nodePos(i, S.topo); n.x = p.x; n.y = p.y; });
+  }
+
   function build(topo) {
     size();
-    const W = cv.width, H = cv.height;
-    const cx = W / 2, cy = H / 2, R = Math.min(W, H) * 0.38;
     const nodes = [], edges = [];
-    const star = topo === "estrela";
     for (let i = 0; i < N; i++) {
-      let x, y;
-      if (star && i === 0) { x = cx; y = cy; }
-      else {
-        const idx = star ? i - 1 : i, count = star ? N - 1 : N;
-        const a = (idx / count) * Math.PI * 2 - Math.PI / 2;
-        const rr = R * (topo === "malha" ? (0.62 + 0.38 * ((i * 2654435761) % 100) / 100) : 1);
-        x = cx + Math.cos(a) * rr; y = cy + Math.sin(a) * rr;
-      }
-      nodes.push({ x, y, rep: 100, poisoned: false, active: true, glow: 0, ph: Math.random() * 6.28 });
+      const p = nodePos(i, topo);
+      nodes.push({ x: p.x, y: p.y, rep: 100, poisoned: false, active: true, glow: 0,
+        ph: Math.random() * 6.28, role: ROLES[i % ROLES.length], decay: DECAY });
     }
     const add = (a, b) => {
       if (a !== b && !edges.some(e => (e.a === a && e.b === b) || (e.a === b && e.b === a)))
         edges.push({ a, b, cut: false, bend: ((a + b) % 2 ? 1 : -1) * (0.05 + ((a * 7 + b * 13) % 10) / 110) });
     };
     if (topo === "anel") for (let i = 0; i < N; i++) add(i, (i + 1) % N);
-    else if (star) for (let i = 1; i < N; i++) add(0, i);
+    else if (topo === "estrela") for (let i = 1; i < N; i++) add(0, i);
     else {
       for (let i = 0; i < N; i++) { add(i, (i + 1) % N); add(i, (i + 2) % N); }
       let seed = 42;
       const rnd = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
       for (let k = 0; k < 7; k++) add(Math.floor(rnd() * N), Math.floor(rnd() * N));
     }
-    S = { topo, nodes, edges, round: 0, acc: 52, pulses: [], flash: null };
-    logLine("le-node", "federação inicializada — topologia " + topo + ", " + N + " nós");
+    S = { topo, nodes, edges, round: 0, acc: 92, pulses: [], flash: null,
+      defense: true, spread: false, timers: [], scen: null };
+    syncDefenseUI();
+    logLine("le-node", "federação inicializada — " + N + " dispositivos, topologia " + topo);
     stats();
   }
 
   const aliveE = e => !e.cut && S.nodes[e.a].active && S.nodes[e.b].active;
+  const neighbors = i => {
+    const out = [];
+    for (const e of S.edges) {
+      if (!aliveE(e)) continue;
+      if (e.a === i) out.push(e.b); else if (e.b === i) out.push(e.a);
+    }
+    return out;
+  };
+  const roleStr = i => `${S.nodes[i].role.e} ${S.nodes[i].role.n} #${pad2(i)}`;
 
-  // Geometria da curva (sinapse): bézier quadrática com leve arco.
   function edgeGeo(e) {
     const A = S.nodes[e.a], B = S.nodes[e.b];
     const mx = (A.x + B.x) / 2, my = (A.y + B.y) / 2;
     return { A, B, cx: mx - (B.y - A.y) * e.bend, cy: my + (B.x - A.x) * e.bend };
   }
   const qPoint = (g, t) => ({
-    x: (1 - t) * (1 - t) * g.A.x + 2 * (1 - t) * t * g.cx + t * t * g.B.x,
-    y: (1 - t) * (1 - t) * g.A.y + 2 * (1 - t) * t * g.cy + t * t * g.B.y,
+    x: (1 - t) ** 2 * g.A.x + 2 * (1 - t) * t * g.cx + t * t * g.B.x,
+    y: (1 - t) ** 2 * g.A.y + 2 * (1 - t) * t * g.cy + t * t * g.B.y,
   });
 
   const logBox = document.getElementById("brainLog");
@@ -1509,26 +1633,28 @@ document.querySelectorAll("[data-tip]").forEach(el => {
       `<div><span class="le-t">[r${pad2(r)}]</span> <span class="${cls}">${
         cls === "le-node" ? "NodeEvent" : cls === "le-msg" ? "MessageEvent" : "AddonEvent"
       }</span> · ${msg}</div>`);
-    while (logBox.children.length > 24) logBox.lastChild.remove();
+    while (logBox.children.length > 26) logBox.lastChild.remove();
   }
 
   function stats() {
     const act = S.nodes.filter(n => n.active);
+    const poisonedActive = S.nodes.filter(n => n.poisoned && n.active).length;
     document.getElementById("stRound").textContent = S.round;
     document.getElementById("stNodes").textContent = act.length + "/" + N;
-    document.getElementById("stEdges").textContent = S.edges.filter(aliveE).length;
-    document.getElementById("stRep").textContent =
-      Math.round(act.reduce((s, n) => s + n.rep, 0) / Math.max(act.length, 1));
+    document.getElementById("stThreatN").textContent = poisonedActive;
+    const th = document.getElementById("stThreat");
+    if (poisonedActive === 0) { th.textContent = "calmo"; th.className = "v threat calm"; }
+    else if (poisonedActive <= 2) { th.textContent = "elevado"; th.className = "v threat elev"; }
+    else { th.textContent = "crítico"; th.className = "v threat crit"; }
     document.getElementById("stAcc").textContent = fmt(S.acc, 1) + "%";
     document.getElementById("accFill").style.width = S.acc + "%";
-    document.getElementById("accFill").style.background =
-      S.nodes.some(n => n.poisoned && n.active) ? C.bad : "var(--accent)";
+    document.getElementById("accFill").style.background = poisonedActive ? C.bad : "var(--accent)";
   }
 
   function doRound() {
     S.round++;
     for (const n of S.nodes) if (n.active) n.glow = 1;
-    if (S.round % 4 === 1) logLine("le-node", "ronda de treino local concluída nos nós ativos");
+    if (S.round % 4 === 1) logLine("le-node", "ronda de treino local concluída nos dispositivos ativos");
 
     if (!REDUCED) for (const e of S.edges) {
       if (!aliveE(e)) continue;
@@ -1536,11 +1662,28 @@ document.querySelectorAll("[data-tip]").forEach(el => {
       S.pulses.push({ e, rev: !flip, t: 0, bad: S.nodes[flip ? e.a : e.b].poisoned });
     }
 
+    // Propagação de infecção (ransomware) — tenta pular para um vizinho saudável.
+    if (S.spread) {
+      const poisonedActive = S.nodes.filter(n => n.poisoned && n.active).length;
+      if (poisonedActive < N * 0.6) {
+        for (let i = 0; i < N; i++) {
+          const n = S.nodes[i];
+          if (!n.active || !n.poisoned) continue;
+          if (Math.random() < 0.5) {
+            const alvo = neighbors(i).filter(j => !S.nodes[j].poisoned && S.nodes[j].active);
+            if (alvo.length) {
+              const j = alvo[Math.floor(Math.random() * alvo.length)];
+              S.nodes[j].poisoned = true;
+              logLine("le-addon", `ransomware saltou de #${pad2(i)} para ${roleStr(j)}`);
+            }
+          }
+        }
+      }
+    }
+
     const poisonedActive = S.nodes.filter(n => n.poisoned && n.active);
     if (poisonedActive.length) {
       S.acc = Math.max(35, S.acc - 5.5 * poisonedActive.length + (97 - S.acc) * 0.06);
-      if (S.round % 3 === 0)
-        logLine("le-msg", `agregação recebendo pesos adulterados do nó ${pad2(S.nodes.indexOf(poisonedActive[0]))} — acurácia degradando`);
     } else {
       S.acc = S.acc + (97 - S.acc) * 0.22;
     }
@@ -1548,73 +1691,202 @@ document.querySelectorAll("[data-tip]").forEach(el => {
     S.nodes.forEach((n, i) => {
       if (!n.active) return;
       if (n.poisoned) {
-        n.rep = Math.max(0, n.rep - 13);
-        if (n.rep <= 40) {
+        n.rep = Math.max(0, n.rep - n.decay);
+        if (S.defense && n.rep <= EXPEL) {
           n.active = false; n.poisoned = false;
-          logLine("le-addon", `nó ${pad2(i)} EXPULSO da federação (reputação ${Math.round(n.rep)}) — ligações adormecidas`);
-          logLine("le-node", "agregação retomada sem o nó malicioso — modelo recuperando");
+          logLine("le-addon", `${roleStr(i)} ISOLADO pela federação (reputação ${Math.round(n.rep)})`);
         }
       } else n.rep = Math.min(100, n.rep + 6);
     });
     stats();
   }
 
-  /* ---------- ações: envenenar · sanear · readmitir · cortar ---------- */
-  function actOn(i) {
+  /* ---------- ações atômicas ---------- */
+  function poison(i, decay) {
     const n = S.nodes[i];
-    if (!n.active) {          // readmitir
-      n.active = true; n.rep = 50; n.poisoned = false;
-      logLine("le-node", `nó ${pad2(i)} readmitido em observação (reputação 50) — ligações reativadas`);
-    } else if (n.poisoned) {  // sanear
-      n.poisoned = false; n.rep = Math.max(n.rep, 55);
-      logLine("le-node", `nó ${pad2(i)} saneado (re-imagem do dispositivo) — em observação até reputação plena`);
-    } else {                  // envenenar
-      n.poisoned = true;
-      logLine("le-addon", `injeção adversarial no nó ${pad2(i)} — gradientes corrompidos entram na agregação`);
-    }
+    if (!n.active) return;
+    n.poisoned = true; n.decay = decay || DECAY;
+    logLine("le-addon", `injeção adversarial em ${roleStr(i)} — gradientes corrompidos`);
+  }
+  function heal(i) {
+    const n = S.nodes[i];
+    if (!n.active) { n.active = true; n.rep = 50; n.poisoned = false; n.decay = DECAY;
+      logLine("le-node", `${roleStr(i)} readmitido em observação (reputação 50)`); }
+    else if (n.poisoned) { n.poisoned = false; n.decay = DECAY; n.rep = Math.max(n.rep, 55);
+      logLine("le-node", `${roleStr(i)} saneado (re-imagem) — em observação`); }
+  }
+  function clickNode(i) {
+    const n = S.nodes[i];
+    if (!n.active || n.poisoned) heal(i);
+    else poison(i);
     stats();
   }
-  function randomWhere(pred) {
-    const c = S.nodes.map((_, j) => j).filter(pred);
+  function randWhere(pred) {
+    const c = []; for (let i = 0; i < N; i++) if (pred(i)) c.push(i);
     return c.length ? c[Math.floor(Math.random() * c.length)] : null;
   }
-  document.getElementById("btnPoison").addEventListener("click", () => {
-    const i = randomWhere(j => S.nodes[j].active && !S.nodes[j].poisoned);
-    if (i != null) actOn(i);
-  });
-  document.getElementById("btnHeal").addEventListener("click", () => {
-    let i = randomWhere(j => S.nodes[j].poisoned);
-    if (i == null) i = randomWhere(j => !S.nodes[j].active);   // nada envenenado? readmite
-    if (i != null) actOn(i);
-    else logLine("le-node", "nada a sanear — todos os nós estão saudáveis");
-  });
-  document.getElementById("btnCut").addEventListener("click", () => {
+  function spreadPick(k, pred) {  // k nós bem distribuídos que satisfazem pred
+    const c = []; for (let i = 0; i < N; i++) if (pred(i)) c.push(i);
+    const out = [], step = Math.max(1, Math.floor(c.length / k));
+    for (let x = 0; x < c.length && out.length < k; x += step) out.push(c[x]);
+    return out;
+  }
+  function setDefense(on) {
+    S.defense = on;
+    syncDefenseUI();
+    logLine("le-node", on ? "auditoria de reputação LIGADA" : "auditoria de reputação DESLIGADA");
+    stats();
+  }
+  function syncDefenseUI() {
+    const t = document.getElementById("defToggle");
+    t.classList.toggle("on", S.defense);
+    t.setAttribute("aria-checked", String(S.defense));
+  }
+  function cutRandom() {
     const alive = S.edges.filter(aliveE);
     if (!alive.length) return;
     const e = alive[Math.floor(Math.random() * alive.length)];
-    e.cut = true;
-    S.flash = { e, t: 1 };
-    logLine("le-msg", `ligação ${pad2(e.a)}↔${pad2(e.b)} cortada — nós sobreviventes seguem treinando`);
+    e.cut = true; S.flash = { e, t: 1 };
+    logLine("le-msg", `ligação ${pad2(e.a)}↔${pad2(e.b)} cortada — vizinhos seguem treinando`);
     stats();
-  });
-  document.getElementById("btnReset").addEventListener("click", () => { logBox.innerHTML = ""; build(S.topo); });
-  document.querySelectorAll(".seg button").forEach(b =>
-    b.addEventListener("click", () => {
-      document.querySelectorAll(".seg button").forEach(x => x.classList.remove("on"));
-      b.classList.add("on");
-      logBox.innerHTML = "";
-      build(b.dataset.topo);
-    }));
+  }
+  function partition(on) {  // divide/religa a rede por uma linha vertical no centro
+    const W = cv.width, mid = W / 2;
+    for (const e of S.edges) {
+      const left = S.nodes[e.a].x < mid, right = S.nodes[e.b].x < mid;
+      if (left !== right) { e.cut = on; if (on) S.flash = { e, t: 1 }; }
+    }
+    stats();
+  }
 
-  /* ---------- interação com neurônios ---------- */
+  /* ---------- motor de cenários ---------- */
+  const story = document.getElementById("story");
+  const scenGrid = document.getElementById("scenGrid");
+  const btnStop = document.getElementById("btnStop");
+
+  function say(ic, name, i, total, text) {
+    story.hidden = false;
+    document.getElementById("storyIc").textContent = ic;
+    document.getElementById("storyName").textContent = name;
+    document.getElementById("storyStep").textContent = `passo ${i}/${total}`;
+    document.getElementById("storyText").innerHTML = text;
+  }
+
+  const SCEN = {
+    sybil: { ic: "🎭", name: "Ataque coordenado (Sybil)", steps: [
+      { at: 0, say: "Um adversário comprou acesso a <b>4 dispositivos</b> e os liga ao mesmo tempo para votar em bloco no modelo global.",
+        run: () => spreadPick(4, i => S.nodes[i].active && i !== 0).forEach(i => poison(i)) },
+      { at: 3000, say: "A saúde do modelo <b>despenca</b> — os quatro traidores empurram o aprendizado para o lado errado." },
+      { at: 7000, say: "Mas cada vizinho honesto compara as atualizações recebidas. A <b>reputação</b> dos quatro começa a cair." },
+      { at: 11000, say: "Um a um, os traidores são <b>isolados pela própria rede</b> — sem ninguém no comando central." },
+      { at: 16000, say: "✓ Mesmo com 4 traidores simultâneos, a <b>maioria honesta prevaleceu</b> e o modelo se recuperou.", end: true },
+    ]},
+    ransomware: { ic: "🦠", name: "Surto de ransomware", steps: [
+      { at: 0, say: "Uma estação de trabalho é infectada. O ransomware não quer só ela — quer a <b>rede inteira</b>.",
+        run: () => { S.spread = true; poison(randWhere(i => S.nodes[i].active && neighbors(i).length >= 2)); } },
+      { at: 3500, say: "A cada rodada ele <b>tenta pular para um vizinho</b> conectado. Veja a mancha vermelha tentando crescer." },
+      { at: 9000, say: "A auditoria isola cada máquina infectada <b>antes</b> que ela contamine muitos vizinhos — contenção." },
+      { at: 15000, say: "✓ A infecção foi <b>contida</b>. Compare com o cenário “sem defesa”, onde ela toma tudo.", end: true,
+        run: () => { S.spread = false; } },
+    ]},
+    partition: { ic: "🔌", name: "Cabo de fibra rompido", steps: [
+      { at: 0, say: "Uma retroescavadeira <b>rompe o cabo de fibra</b> que liga as duas alas do campus.",
+        run: () => partition(true) },
+      { at: 3500, say: "Num sistema centralizado, metade ficaria cega. Aqui, as <b>duas ilhas continuam treinando</b> localmente." },
+      { at: 9000, say: "A fibra é <b>religada</b> — os dois lados reconciliam o aprendizado e seguem como se nada fosse.",
+        run: () => partition(false) },
+      { at: 13000, say: "✓ Sem servidor central, <b>não há ponto único de falha</b>. A rede é resiliente por desenho.", end: true },
+    ]},
+    insider: { ic: "🕵️", name: "Insider lento (low & slow)", steps: [
+      { at: 0, say: "Um funcionário mal-intencionado sabota o modelo <b>devagar</b>, em doses pequenas, para não disparar o alarme.",
+        run: () => poison(randWhere(i => S.nodes[i].active && i !== 0), 7) },
+      { at: 4500, say: "A saúde cai <b>lentamente</b> — fácil de confundir com ruído normal. É assim que ataques reais passam despercebidos." },
+      { at: 11000, say: "Mas a auditoria é <b>contínua</b>: rodada após rodada, a suspeita se acumula sobre o sabotador." },
+      { at: 19000, say: "✓ O ataque furtivo demora mais, mas a <b>vigilância persistente</b> acaba pegando — e a explicabilidade diria por quê.", end: true },
+    ]},
+    nodefense: { ic: "💥", name: "E se não houvesse defesa?", steps: [
+      { at: 0, say: "Vamos <b>desligar a auditoria</b> — como num sistema ingênuo, sem reputação entre pares.",
+        run: () => setDefense(false) },
+      { at: 2000, say: "Agora o ataque: <b>três dispositivos comprometidos</b>. Sem defesa, ninguém os questiona.",
+        run: () => spreadPick(3, i => S.nodes[i].active && i !== 0).forEach(i => poison(i)) },
+      { at: 7000, say: "A infecção <b>domina o consenso</b>. A saúde do modelo despenca e não volta — o sistema está corrompido." },
+      { at: 11000, say: "Agora <b>religamos a defesa</b>. Observe a diferença.",
+        run: () => setDefense(true) },
+      { at: 14000, say: "A reputação dos traidores desaba e eles são <b>expulsos</b>. O modelo ressuscita." },
+      { at: 19000, say: "✓ A auditoria distribuída é o que separa uma rede resiliente de um <b>castelo de cartas</b>.", end: true },
+    ]},
+    ddos: { ic: "🌊", name: "Sobrecarga em massa", steps: [
+      { at: 0, say: "Um ataque coordenado atinge <b>10 dispositivos</b> ao mesmo tempo — cenário de guerra cibernética.",
+        run: () => spreadPick(10, i => S.nodes[i].active && i !== 0).forEach(i => poison(i)) },
+      { at: 3500, say: "A saúde entra em <b>queda livre</b>. Quase metade da federação está comprometida de uma vez." },
+      { at: 8000, say: "A maioria honesta ainda existe. A auditoria trabalha <b>em paralelo</b>, isolando os comprometidos em lote." },
+      { at: 15000, say: "Com os atacantes fora, os dispositivos sobreviventes <b>reconstroem o modelo</b>." },
+      { at: 21000, say: "✓ Até uma sobrecarga em massa é absorvida — <b>desde que os honestos sejam maioria</b>.", end: true },
+    ]},
+  };
+
+  function stopScenario(silent) {
+    if (S && S.timers) { S.timers.forEach(clearTimeout); S.timers = []; }
+    if (S) S.scen = null;
+    btnStop.hidden = true;
+    scenGrid.querySelectorAll(".scen").forEach(b => b.classList.remove("running", "dim"));
+    if (!silent) story.hidden = true;
+  }
+
+  function runScenario(id) {
+    const sc = SCEN[id];
+    if (!sc) return;
+    logBox.innerHTML = "";
+    build(S.topo);               // recomeça limpo mantendo a topologia escolhida
+    S.scen = id;
+    btnStop.hidden = false;
+    scenGrid.querySelectorAll(".scen").forEach(b => {
+      b.classList.toggle("running", b.dataset.scen === id);
+      b.classList.toggle("dim", b.dataset.scen !== id);
+    });
+    const total = sc.steps.length;
+    sc.steps.forEach((st, k) => {
+      S.timers.push(setTimeout(() => {
+        if (st.run) st.run();
+        say(sc.ic, sc.name, k + 1, total, st.say);
+        stats();
+        if (st.end) {
+          scenGrid.querySelectorAll(".scen").forEach(b => b.classList.remove("running", "dim"));
+          btnStop.hidden = true;
+          S.timers.push(setTimeout(() => { if (S.scen === id) story.hidden = true; }, 9000));
+        }
+      }, st.at));
+    });
+  }
+
+  scenGrid.querySelectorAll(".scen").forEach(b =>
+    b.addEventListener("click", () => runScenario(b.dataset.scen)));
+  btnStop.addEventListener("click", () => stopScenario(false));
+
+  /* ---------- controles manuais (interrompem cenário) ---------- */
+  const manual = fn => () => { stopScenario(false); fn(); };
+  document.getElementById("btnPoison").addEventListener("click", manual(() => {
+    const i = randWhere(j => S.nodes[j].active && !S.nodes[j].poisoned); if (i != null) { poison(i); stats(); }
+  }));
+  document.getElementById("btnHeal").addEventListener("click", manual(() => {
+    let i = randWhere(j => S.nodes[j].poisoned); if (i == null) i = randWhere(j => !S.nodes[j].active);
+    if (i != null) { heal(i); stats(); } else logLine("le-node", "nada a sanear — todos saudáveis");
+  }));
+  document.getElementById("btnCut").addEventListener("click", manual(cutRandom));
+  document.getElementById("btnReset").addEventListener("click", manual(() => { logBox.innerHTML = ""; build(S.topo); }));
+  document.getElementById("defToggle").addEventListener("click", () => setDefense(!S.defense));
+  document.querySelectorAll(".seg button").forEach(b =>
+    b.addEventListener("click", manual(() => {
+      document.querySelectorAll(".seg button").forEach(x => x.classList.remove("on"));
+      b.classList.add("on"); logBox.innerHTML = ""; build(b.dataset.topo);
+    })));
+
+  /* ---------- interação com os dispositivos ---------- */
   function nodeAt(ev) {
     const r = cv.getBoundingClientRect();
     const x = (ev.clientX - r.left) * DPR, y = (ev.clientY - r.top) * DPR;
     let best = -1, bd = 24 * DPR;
-    S.nodes.forEach((n, i) => {
-      const d = Math.hypot(n.x - x, n.y - y);
-      if (d < bd) { bd = d; best = i; }
-    });
+    S.nodes.forEach((n, i) => { const d = Math.hypot(n.x - x, n.y - y); if (d < bd) { bd = d; best = i; } });
     return best;
   }
   cv.addEventListener("pointermove", ev => {
@@ -1622,13 +1894,14 @@ document.querySelectorAll("[data-tip]").forEach(el => {
     cv.style.cursor = hoverN >= 0 ? "pointer" : "default";
     if (hoverN >= 0) {
       const n = S.nodes[hoverN];
-      const estado = !n.active ? "⛔ expulso" : n.poisoned ? "⚠ envenenado" : n.rep < 90 ? "🟠 em observação" : "✓ saudável";
+      const estado = !n.active ? "⛔ isolado" : n.poisoned ? "⚠ comprometido"
+        : n.rep < 90 ? "🟠 em observação" : "✓ saudável";
       const acao = !n.active ? "readmitir" : n.poisoned ? "sanear (curar)" : "envenenar";
-      showTip(ev, `nó <b>${pad2(hoverN)}</b> · ${estado}<br>reputação <b>${Math.round(n.rep)}</b>/100 — clique para <b>${acao}</b>`);
+      showTip(ev, `${roleStr(hoverN)}<br>${estado} · reputação <b>${Math.round(n.rep)}</b>/100<br><span style="color:var(--muted)">clique para ${acao}</span>`);
     } else hideTip();
   });
   cv.addEventListener("pointerleave", () => { hoverN = -1; hideTip(); });
-  cv.addEventListener("click", ev => { const i = nodeAt(ev); if (i >= 0) actOn(i); });
+  cv.addEventListener("click", ev => { const i = nodeAt(ev); if (i >= 0) { stopScenario(false); clickNode(i); } });
 
   /* ---------- desenho ---------- */
   function draw(t) {
@@ -1638,36 +1911,29 @@ document.querySelectorAll("[data-tip]").forEach(el => {
 
     for (const e of S.edges) {
       if (e.cut) continue;
-      const g = edgeGeo(e);
-      const dormant = !aliveE(e);
+      const g = edgeGeo(e), dormant = !aliveE(e);
       const hi = !dormant && (hoverN === e.a || hoverN === e.b);
       ctx.strokeStyle = dormant ? C.dormant : hi ? C.edgeHi : C.edge;
       ctx.lineWidth = (hi ? 1.7 : 1) * DPR;
       if (dormant) ctx.setLineDash([4 * DPR, 6 * DPR]);
-      ctx.beginPath(); ctx.moveTo(g.A.x, g.A.y);
-      ctx.quadraticCurveTo(g.cx, g.cy, g.B.x, g.B.y); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(g.A.x, g.A.y); ctx.quadraticCurveTo(g.cx, g.cy, g.B.x, g.B.y); ctx.stroke();
       ctx.setLineDash([]);
     }
 
     if (S.flash && S.flash.t > 0) {
       const g = edgeGeo(S.flash.e);
-      ctx.strokeStyle = C.badA(S.flash.t);
-      ctx.lineWidth = 2 * DPR; ctx.setLineDash([6 * DPR, 5 * DPR]);
-      ctx.beginPath(); ctx.moveTo(g.A.x, g.A.y);
-      ctx.quadraticCurveTo(g.cx, g.cy, g.B.x, g.B.y); ctx.stroke();
-      ctx.setLineDash([]);
-      S.flash.t -= 0.02;
+      ctx.strokeStyle = C.badA(S.flash.t); ctx.lineWidth = 2 * DPR; ctx.setLineDash([6 * DPR, 5 * DPR]);
+      ctx.beginPath(); ctx.moveTo(g.A.x, g.A.y); ctx.quadraticCurveTo(g.cx, g.cy, g.B.x, g.B.y); ctx.stroke();
+      ctx.setLineDash([]); S.flash.t -= 0.02;
     }
 
     S.pulses = S.pulses.filter(p => p.t < 1 && aliveE(p.e));
     for (const p of S.pulses) {
       p.t += 0.022;
-      const g = edgeGeo(p.e);
-      const pt = qPoint(g, p.rev ? 1 - p.t : p.t);
+      const pt = qPoint(edgeGeo(p.e), p.rev ? 1 - p.t : p.t);
       ctx.beginPath(); ctx.arc(pt.x, pt.y, 2.2 * DPR, 0, 6.29);
       ctx.fillStyle = p.bad ? C.bad : C.ok;
-      ctx.shadowColor = p.bad ? C.bad : C.ok; ctx.shadowBlur = 6 * DPR;
-      ctx.fill(); ctx.shadowBlur = 0;
+      ctx.shadowColor = p.bad ? C.bad : C.ok; ctx.shadowBlur = 6 * DPR; ctx.fill(); ctx.shadowBlur = 0;
     }
 
     S.nodes.forEach((n, i) => {
@@ -1678,23 +1944,18 @@ document.querySelectorAll("[data-tip]").forEach(el => {
       const color = n.poisoned ? C.bad : (n.rep < 90 ? C.warn : C.ok);
       const halo = n.poisoned ? C.badA : (n.rep < 90 ? C.warnA : C.okA);
 
-      if (!n.active) {         // expulso: anel oco tracejado + ✕
+      if (!n.active) {
         ctx.beginPath(); ctx.arc(n.x, n.y, base, 0, 6.29);
-        ctx.strokeStyle = C.out; ctx.lineWidth = 1.4 * DPR;
-        ctx.setLineDash([3 * DPR, 3 * DPR]); ctx.stroke(); ctx.setLineDash([]);
-        const s = base * 0.45;
-        ctx.strokeStyle = C.out; ctx.lineWidth = 1.4 * DPR;
-        ctx.beginPath();
+        ctx.strokeStyle = C.out; ctx.lineWidth = 1.4 * DPR; ctx.setLineDash([3 * DPR, 3 * DPR]); ctx.stroke(); ctx.setLineDash([]);
+        const s = base * 0.45; ctx.beginPath();
         ctx.moveTo(n.x - s, n.y - s); ctx.lineTo(n.x + s, n.y + s);
         ctx.moveTo(n.x + s, n.y - s); ctx.lineTo(n.x - s, n.y + s);
-        ctx.stroke();
+        ctx.strokeStyle = C.out; ctx.lineWidth = 1.4 * DPR; ctx.stroke();
       } else {
         const pulse = n.poisoned && !REDUCED ? 0.55 + 0.45 * Math.sin(phase * 5 + n.ph) : 1;
         ctx.beginPath(); ctx.arc(n.x, n.y, r + 6 * DPR, 0, 6.29);
-        ctx.fillStyle = halo((0.10 + n.glow * 0.25) * pulse);
-        ctx.fill();
-        ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, 6.29);
-        ctx.fillStyle = color; ctx.fill();
+        ctx.fillStyle = halo((0.10 + n.glow * 0.25) * pulse); ctx.fill();
+        ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, 6.29); ctx.fillStyle = color; ctx.fill();
         ctx.beginPath();
         ctx.arc(n.x, n.y, r + 3 * DPR, -Math.PI / 2, -Math.PI / 2 + (n.rep / 100) * 6.283);
         ctx.strokeStyle = n.poisoned ? C.bad : n.rep < 90 ? C.warn : "rgba(232,238,246,0.35)";
@@ -1714,11 +1975,11 @@ document.querySelectorAll("[data-tip]").forEach(el => {
   }
 
   build("malha");
-  addEventListener("resize", () => build(S.topo));
+  let rzT;
+  addEventListener("resize", () => { clearTimeout(rzT); rzT = setTimeout(relayout, 150); });
   if (REDUCED) { draw(0); setInterval(() => { doRound(); draw(0); }, ROUND_MS); }
   else requestAnimationFrame(loop);
 })();
-
 </script>
 
 </body>
