@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>cyber-data-lab — dossiê: da teoria à detecção</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="cyber-data-lab — um radar de segurança que aprende o normal da sua rede e acusa o anormal, com um cérebro de cenários de ataque interativos.">
+<meta name="description" content="cyber-data-lab — um radar de segurança que aprende o normal da sua rede e acusa o anormal. Teste o cérebro ao vivo.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛡️</text></svg>">
 </head>
 <body>
@@ -83,6 +83,46 @@
     padding: 5px 11px; background: rgba(19, 26, 36, 0.7);
   }
   .meta-chips b { color: var(--accent); font-weight: 500; }
+
+  .cta-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 28px; }
+  .cta {
+    font-family: var(--mono); font-size: 14px; text-decoration: none;
+    border-radius: 9px; padding: 12px 22px; letter-spacing: .02em;
+    transition: transform .12s, box-shadow .12s, border-color .15s, color .15s;
+  }
+  .cta.primary { background: var(--accent); color: #08222a; font-weight: 600; }
+  .cta.primary:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(76,201,212,.35); }
+  .cta.ghost { border: 1px solid var(--baseline); color: var(--ink-2); }
+  .cta.ghost:hover { border-color: var(--accent); color: var(--accent); }
+  .cta:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .hero-grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: 46px; align-items: center; }
+  .hero-grid h1 { max-width: none; font-size: clamp(32px, 4.4vw, 52px); }
+  .hero-grid .lead { font-size: 17px; }
+  @media (max-width: 920px) { .hero-grid { grid-template-columns: 1fr; gap: 34px; } }
+
+  /* card responsivo do cérebro */
+  .brain-card {
+    display: block; text-decoration: none;
+    background: var(--surface); border: 1px solid var(--ring); border-radius: 14px;
+    overflow: hidden; transition: transform .15s, border-color .15s, box-shadow .15s;
+  }
+  .brain-card:hover { transform: translateY(-4px); border-color: var(--accent-dim); box-shadow: 0 14px 40px rgba(0,0,0,.45); }
+  .brain-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  #miniBrain { display: block; width: 100%; height: 190px; background: radial-gradient(ellipse at 50% 30%, #16202e 0%, #10161f 70%); }
+  .bc-body { padding: 18px 20px 20px; }
+  .bc-tag { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+  .bc-body h3 { margin: 8px 0 6px; font-size: 18px; color: var(--ink); }
+  .bc-body p { margin: 0; font-size: 13.5px; color: var(--ink-2); line-height: 1.55; }
+  .bc-cta { display: inline-block; margin-top: 14px; font-family: var(--mono); font-size: 12.5px; color: var(--accent); }
+  .brain-card:hover .bc-cta { text-decoration: underline; }
+
+  .navbtn {
+    display: none; margin-left: auto; cursor: pointer;
+    background: transparent; border: 1px solid var(--baseline); color: var(--ink-2);
+    border-radius: 7px; font-size: 16px; padding: 4px 11px;
+  }
+  .navbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
   /* ================= seções / partes ================= */
   section { padding: 78px 0 10px; }
@@ -448,14 +488,24 @@
     .step { padding-left: 52px; }
     .step .node { width: 34px; height: 34px; }
     .step::before { left: 16px; }
-    nav.bar .links { display: none; }
+    nav.bar .navbtn { display: block; }
+    nav.bar .links {
+      display: none; position: absolute; top: 100%; left: 0; right: 0;
+      flex-direction: column; gap: 0; margin: 0;
+      background: rgba(11, 17, 26, 0.97); backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--grid); padding: 4px 24px 12px;
+    }
+    nav.bar .links.open { display: flex; }
+    nav.bar .links a { padding: 11px 0; border-bottom: 1px solid var(--grid); font-size: 13px; }
+    nav.bar .links a:last-child { border-bottom: none; }
   }
 </style>
 
 <nav class="bar" aria-label="Navegação do dossiê">
   <div class="inner">
     <span class="id">CYBER-DATA-LAB</span>
-    <span style="color:var(--muted)">dossiê v2</span>
+    <span style="color:var(--muted)">segurança que aprende</span>
+    <button id="navBtn" class="navbtn" aria-label="Abrir menu" aria-expanded="false">☰</button>
     <div class="links">
       <a href="#parte1">O que é</a>
       <a href="#mercado">Para quem</a>
@@ -470,6 +520,8 @@
 <header class="hero">
   <canvas id="flowfield" aria-hidden="true"></canvas>
   <div class="wrap hero-inner">
+    <div class="hero-grid">
+    <div class="hero-copy">
     <div class="eyebrow">cyber-data-lab · segurança de redes que aprende sozinha</div>
     <h1>Um radar que aprende o <em>normal</em> da sua rede — e acusa o anormal.</h1>
     <p class="lead">
@@ -485,6 +537,23 @@
       <span>seus dados <b>nunca saem da rede</b></span>
       <span>código <b>aberto e verificado</b></span>
     </div>
+    <div class="cta-row">
+      <a class="cta primary" href="#parte5">▶ Testar o cérebro ao vivo</a>
+      <a class="cta ghost" href="#planos">Conhecer os planos</a>
+    </div>
+    </div><!-- /hero-copy -->
+
+    <a class="brain-card" href="#parte5" aria-label="Ir para a simulação interativa do cérebro">
+      <canvas id="miniBrain" aria-hidden="true"></canvas>
+      <div class="bc-body">
+        <span class="bc-tag">● demonstração ao vivo</span>
+        <h3>O cérebro da tecnologia</h3>
+        <p>22 dispositivos aprendendo em rede — sem nunca compartilhar dados.
+        Envenene um nó, rompa a fibra, desligue a defesa: a federação reage sozinha.</p>
+        <span class="bc-cta">▶ interagir com a simulação completa</span>
+      </div>
+    </a>
+    </div><!-- /hero-grid -->
   </div>
 </header>
 
@@ -1533,6 +1602,65 @@ document.querySelectorAll("[data-tip]").forEach(el => {
   el.addEventListener("pointermove", ev => showTip(ev, el.dataset.tip));
   el.addEventListener("pointerleave", hideTip);
 });
+
+/* ---------- menu responsivo ---------- */
+(function () {
+  const btn = document.getElementById("navBtn");
+  const links = document.querySelector("nav.bar .links");
+  if (!btn || !links) return;
+  btn.addEventListener("click", () => {
+    const open = links.classList.toggle("open");
+    btn.setAttribute("aria-expanded", String(open));
+    btn.textContent = open ? "✕" : "☰";
+  });
+  links.querySelectorAll("a").forEach(a => a.addEventListener("click", () => {
+    links.classList.remove("open");
+    btn.setAttribute("aria-expanded", "false");
+    btn.textContent = "☰";
+  }));
+})();
+
+/* ---------- mini cérebro: prévia animada no card do herói ---------- */
+(function () {
+  const cv = document.getElementById("miniBrain");
+  if (!cv) return;
+  const ctx = cv.getContext("2d"), DPR = Math.min(devicePixelRatio || 1, 2), M = 12;
+  let nodes = [], edges = [], pulses = [];
+  function init() {
+    cv.width = cv.offsetWidth * DPR; cv.height = cv.offsetHeight * DPR;
+    const cx = cv.width / 2, cy = cv.height / 2, R = Math.min(cv.width, cv.height) * 0.4;
+    nodes = []; edges = []; pulses = [];
+    for (let i = 0; i < M; i++) {
+      const a = i / M * 6.283 - 1.57, rr = R * (0.72 + 0.28 * ((i * 37) % 10) / 10);
+      nodes.push({ x: cx + Math.cos(a) * rr * 1.5, y: cy + Math.sin(a) * rr, ph: Math.random() * 6.28, bad: i === 7 });
+    }
+    for (let i = 0; i < M; i++) { edges.push([i, (i + 1) % M]); if (i % 3 === 0) edges.push([i, (i + 5) % M]); }
+  }
+  function draw(t) {
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    ctx.strokeStyle = "rgba(76,201,212,0.16)"; ctx.lineWidth = 1 * DPR;
+    for (const [a, b] of edges) { ctx.beginPath(); ctx.moveTo(nodes[a].x, nodes[a].y); ctx.lineTo(nodes[b].x, nodes[b].y); ctx.stroke(); }
+    if (!REDUCED && Math.random() < 0.08 && pulses.length < 6)
+      pulses.push({ e: edges[Math.floor(Math.random() * edges.length)], t: 0 });
+    pulses = pulses.filter(p => p.t < 1);
+    for (const p of pulses) {
+      p.t += 0.02;
+      const [a, b] = p.e;
+      const x = nodes[a].x + (nodes[b].x - nodes[a].x) * p.t, y = nodes[a].y + (nodes[b].y - nodes[a].y) * p.t;
+      ctx.beginPath(); ctx.arc(x, y, 2 * DPR, 0, 6.29); ctx.fillStyle = "#4cc9d4"; ctx.fill();
+    }
+    nodes.forEach(n => {
+      const r = (4.2 + (REDUCED ? 0 : Math.sin(t / 600 + n.ph) * 0.7)) * DPR;
+      ctx.beginPath(); ctx.arc(n.x, n.y, r + 4 * DPR, 0, 6.29);
+      ctx.fillStyle = n.bad ? "rgba(230,103,103,.15)" : "rgba(76,201,212,.12)"; ctx.fill();
+      ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, 6.29);
+      ctx.fillStyle = n.bad ? "#e66767" : "#4cc9d4"; ctx.fill();
+    });
+  }
+  function loop(t) { draw(t); requestAnimationFrame(loop); }
+  init(); addEventListener("resize", init);
+  if (REDUCED) draw(0); else requestAnimationFrame(loop);
+})();
 
 /* ================================================================
    O CÉREBRO — playground de aprendizagem federada descentralizada
