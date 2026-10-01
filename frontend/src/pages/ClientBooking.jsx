@@ -149,7 +149,7 @@ export default function ClientBooking() {
         }}>
           <p>💅 <strong>{bookedService?.name || pixData.service_name}</strong></p>
           <p>📅 {formattedDate} às {formattedTime}</p>
-          <p>📍 Rua Ari Carneiro Fernandes, 155</p>
+          <p>📍 Rua Exemplo, 100 - São Paulo</p>
           <p>💰 Total: <strong>R$ {pixData.total_value?.toFixed(2).replace('.', ',')}</strong>
             {pixData.deposit_amount > 0 && ` · Sinal: R$ ${pixData.deposit_amount?.toFixed(2).replace('.', ',')}`}
           </p>
@@ -186,41 +186,34 @@ export default function ClientBooking() {
 
   return (
     <div>
-      {/* 1. APRESENTAÇÃO E CONTATO (GIOVANNA BEAUTY) */}
+      {/* 1. APRESENTAÇÃO E CONTATO  */}
       <header className="hero-section">
         <p className="hero-badge">✦ Studio de Beleza ✦</p>
-        <h1 className="hero-title">Giovanna Beauty</h1>
+        <h1 className="hero-title">Studio Bellart</h1>
         <div className="hero-divider"></div>
         <p className="hero-subtitle">Realçando a sua beleza natural com sofisticação e cuidado</p>
 
         <div className="contact-badges">
           <div className="contact-item">
             <span className="contact-icon">📍</span>
-            <p>Rua Ari Carneiro Fernandes, 155<br/><small style={{color: '#999'}}>Jardim dos Francos</small></p>
+            <p>São Paulo · SP<br/><small style={{color: '#999'}}>Endereço enviado na confirmação</small></p>
           </div>
 
           <div className="contact-item">
             <span className="contact-icon">📱</span>
             <p>WhatsApp:<br/>
               <a
-                href="https://wa.me/5511993627584?text=Oi%20Giovanna%2C%20vi%20o%20seu%20cat%C3%A1logo%20no%20site%20e%20gostaria%20de%20tirar%20uma%20d%C3%BAvida..."
+                href="https://wa.me/5511999999999?text=Oi%2C%20vi%20o%20cat%C3%A1logo%20no%20site%20e%20gostaria%20de%20tirar%20uma%20d%C3%BAvida..."
                 target="_blank"
                 rel="noreferrer"
                 style={{color: 'var(--text-main)', fontWeight: 'bold', textDecoration: 'none'}}
               >
-                (11) 99362-7584
+                (11) 99999-9999
               </a>
             </p>
           </div>
 
-          <div className="contact-item">
-            <span className="contact-icon">📸</span>
-            <p>Instagram:<br/>
-              <a href="https://instagram.com/giovannasoares_beauty" target="_blank" rel="noreferrer" style={{color: 'var(--primary-color)', fontWeight: 'bold', textDecoration: 'none'}}>
-                @giovannasoares_beauty
-              </a>
-            </p>
-          </div>
+          
         </div>
       </header>
 
@@ -231,7 +224,7 @@ export default function ClientBooking() {
       <section className="catalog-grid">
         
         <div className="catalog-card" onClick={() => setActiveModal('brasileiro')} style={{cursor: 'pointer'}}>
-          <img src="/fotos/volume-brasileiro-fio-y.png" alt="Volume Brasileiro Giovanna Beauty" onError={(e) => {e.target.src = "https://images.unsplash.com/photo-1583241800698-e8ab01830a07?q=80&w=600"}} />
+          <img src="/fotos/volume-brasileiro-fio-y.png" alt="Volume Brasileiro Studio Bellart" onError={(e) => {e.target.src = "https://images.unsplash.com/photo-1583241800698-e8ab01830a07?q=80&w=600"}} />
           <div className="catalog-card-body">
             <h4>Volume Brasileiro</h4>
             <p style={{fontSize: '0.9rem', color: 'var(--text-muted)'}}>Fio Y</p>
@@ -239,7 +232,7 @@ export default function ClientBooking() {
         </div>
 
         <div className="catalog-card" onClick={() => setActiveModal('egipcio')} style={{cursor: 'pointer'}}>
-          <img src="/fotos/volume-egipicio-fio-4D.png" alt="Volume Egípcio Giovanna Beauty" onError={(e) => {e.target.src = "https://images.unsplash.com/photo-1512496015851-a90838d54446?q=80&w=600"}} />
+          <img src="/fotos/volume-egipicio-fio-4D.png" alt="Volume Egípcio Studio Bellart" onError={(e) => {e.target.src = "https://images.unsplash.com/photo-1512496015851-a90838d54446?q=80&w=600"}} />
           <div className="catalog-card-body">
             <h4>Volume Egípcio</h4>
             <p style={{fontSize: '0.9rem', color: 'var(--text-muted)'}}>Fio 4D</p>
@@ -247,7 +240,7 @@ export default function ClientBooking() {
         </div>
 
         <div className="catalog-card" onClick={() => setActiveModal('luxxo')} style={{cursor: 'pointer'}}>
-          <img src="/fotos/volume-luxxo-fio-5D.png" alt="Volume Luxxo e Glamour Giovanna Beauty" onError={(e) => {e.target.src = "https://images.unsplash.com/photo-1620052579624-9adfa8ee9c51?q=80&w=600"}} />
+          <img src="/fotos/volume-luxxo-fio-5D.png" alt="Volume Luxxo e Glamour Studio Bellart" onError={(e) => {e.target.src = "https://images.unsplash.com/photo-1620052579624-9adfa8ee9c51?q=80&w=600"}} />
           <div className="catalog-card-body">
             <h4>Volume Luxxo / Glamour</h4>
             <p style={{fontSize: '0.9rem', color: 'var(--text-muted)'}}>Fios 5D e 6D</p>
@@ -255,7 +248,7 @@ export default function ClientBooking() {
         </div>
 
         <div className="catalog-card" onClick={() => setActiveModal('foxy')} style={{cursor: 'pointer'}}>
-          <img src="/fotos/volume-foxxy-eyes.png" alt="Foxy Eyes Giovanna Beauty" onError={(e) => {e.target.src = "https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?q=80&w=600"}} />
+          <img src="/fotos/volume-foxxy-eyes.png" alt="Foxy Eyes Studio Bellart" onError={(e) => {e.target.src = "https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?q=80&w=600"}} />
           <div className="catalog-card-body">
             <h4>Volume Foxy Eyes</h4>
             <p style={{fontSize: '0.9rem', color: 'var(--text-muted)'}}>Curvatura M</p>
@@ -263,7 +256,7 @@ export default function ClientBooking() {
         </div>
 
         <div className="catalog-card" onClick={() => setActiveModal('capping')} style={{cursor: 'pointer'}}>
-          <img src="/fotos/volume-mega-brasileiro.png" alt="Técnica Capping Giovanna Beauty" onError={(e) => {e.target.src = "https://images.unsplash.com/photo-1515377905703-c4788e51af15?q=80&w=600"}} />
+          <img src="/fotos/volume-mega-brasileiro.png" alt="Técnica Capping Studio Bellart" onError={(e) => {e.target.src = "https://images.unsplash.com/photo-1515377905703-c4788e51af15?q=80&w=600"}} />
           <div className="catalog-card-body">
             <h4>Técnica Capping</h4>
             <p style={{fontSize: '0.9rem', color: 'var(--text-muted)'}}>Mega Retenção (Sem manutenção)</p>
@@ -271,7 +264,7 @@ export default function ClientBooking() {
         </div>
 
         <div className="catalog-card" onClick={() => setActiveModal('sobrancelhas')} style={{cursor: 'pointer'}}>
-          <img src="/fotos/brow-lamination.png" alt="Sobrancelhas e Lamination Giovanna Beauty" onError={(e) => {e.target.src = "https://images.unsplash.com/photo-1616683693504-3ea7e9ad6fec?q=80&w=600"}} />
+          <img src="/fotos/brow-lamination.png" alt="Sobrancelhas e Lamination Studio Bellart" onError={(e) => {e.target.src = "https://images.unsplash.com/photo-1616683693504-3ea7e9ad6fec?q=80&w=600"}} />
           <div className="catalog-card-body">
             <h4>Sobrancelhas</h4>
             <p style={{fontSize: '0.9rem', color: 'var(--text-muted)'}}>Lamination, Henna e Design</p>

@@ -167,7 +167,7 @@ export default function ClientVIP() {
                   <div key={a.id} style={{ background: '#fdf1f6', borderRadius: '10px', padding: '14px', marginBottom: '10px' }}>
                     <p style={{ fontWeight: '700', color: 'var(--text-main)', margin: '0 0 4px' }}>{a.service_name}</p>
                     <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', margin: '0 0 8px' }}>🗓️ {fmtDate(a.scheduled_at)}</p>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', margin: 0 }}>📍 Rua Ari Carneiro Fernandes 155</p>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', margin: 0 }}>📍 Rua Exemplo, 100 - São Paulo</p>
                     {a.total_value && (
                       <p style={{ color: 'var(--primary-color)', fontWeight: '700', fontSize: '0.88rem', margin: '6px 0 0' }}>
                         💰 Total: {fmt(a.total_value)} · A pagar no dia: {fmt(a.balance_due)}
@@ -175,9 +175,9 @@ export default function ClientVIP() {
                     )}
                   </div>
                 ))}
-                <a href={`https://wa.me/5511993627584`} target="_blank" rel="noreferrer"
+                <a href={`https://wa.me/5511999999999`} target="_blank" rel="noreferrer"
                   style={{ display: 'block', textAlign: 'center', color: '#25D366', fontWeight: '700', fontSize: '0.9rem', textDecoration: 'none', marginTop: '10px' }}>
-                  💬 Falar com a Giovanna
+                  💬 Falar com o Studio
                 </a>
               </div>
             )}

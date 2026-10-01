@@ -2,7 +2,7 @@
 Módulo de autenticação — JWT + senha via variável de ambiente.
 
 Configurar no Render:
-  ADMIN_PASSWORD  → senha que a Giovanna vai digitar no painel
+  ADMIN_PASSWORD  → senha do painel administrativo
   JWT_SECRET      → string aleatória longa (ex: gere em https://randomkeygen.com)
   JWT_EXPIRE_HOURS → opcional, padrão 48h
 """

@@ -37,11 +37,11 @@ const abrirWpp = (phone, msg) =>
 
 const msgConfirmacao = (apt) => {
   const sinal = (apt.financial?.total_value - apt.financial?.balance_due) || 0;
-  return `Arrasou! ✨✨\n\nSeu horário está confirmado com sucesso!\n\n📅 Data: ${fmtData(apt.scheduled_at)}\n⏰ Horário: ${fmtHora(apt.scheduled_at)}\n📍 Local: Rua Ari Carneiro Fernandes 155\n💅 Procedimento: ${apt.service?.name}\n✅ Valor: ${fmt(apt.financial?.total_value)} - Sinal ${fmt(sinal)} PG ☑️\n\nEstou te esperando pra te deixar ainda mais linda ✨💅\n\nQualquer imprevisto, me avisa com antecedência, tá bom?`;
+  return `Arrasou! ✨✨\n\nSeu horário está confirmado com sucesso!\n\n📅 Data: ${fmtData(apt.scheduled_at)}\n⏰ Horário: ${fmtHora(apt.scheduled_at)}\n📍 Local: Rua Exemplo, 100 - São Paulo\n💅 Procedimento: ${apt.service?.name}\n✅ Valor: ${fmt(apt.financial?.total_value)} - Sinal ${fmt(sinal)} PG ☑️\n\nEstou te esperando pra te deixar ainda mais linda ✨💅\n\nQualquer imprevisto, me avisa com antecedência, tá bom?`;
 };
 
 const msgLembrete = (apt) =>
-  `Oi, meu amor! ✨\n\nPassando pra te lembrar do seu horário comigo.\n\n📅 Data: ${fmtData(apt.scheduled_at)}\n⏰ Horário: ${fmtHora(apt.scheduled_at)}\n📍 Local: Rua Ari Carneiro Fernandes 155\n\nTe espero pra te deixar ainda mais linda ✨💅\n\nPeço que chegue no horário certinho, tá bom? 💕\nQualquer imprevisto, me avisa.`;
+  `Oi, meu amor! ✨\n\nPassando pra te lembrar do seu horário comigo.\n\n📅 Data: ${fmtData(apt.scheduled_at)}\n⏰ Horário: ${fmtHora(apt.scheduled_at)}\n📍 Local: Rua Exemplo, 100 - São Paulo\n\nTe espero pra te deixar ainda mais linda ✨💅\n\nPeço que chegue no horário certinho, tá bom? 💕\nQualquer imprevisto, me avisa.`;
 
 const CORES = ['#d8438b', '#128C7E', '#f59e0b', '#6366f1', '#10b981', '#ef4444'];
 
@@ -1027,7 +1027,7 @@ export default function AdminDashboard() {
     <div style={{ minHeight: '100vh', background: 'var(--bg-color)' }}>
       <div style={{ background: '#fff', borderBottom: '1px solid var(--border-color)', padding: '14px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2 style={{ color: 'var(--primary-color)', fontWeight: '800', fontSize: '1.5rem', margin: 0 }}>
-          ✨ Painel da Giovanna
+          ✨ Painel do Studio
         </h2>
         <button onClick={logout} style={{
           padding: '7px 14px', background: '#f3f4f6', color: 'var(--text-muted)',

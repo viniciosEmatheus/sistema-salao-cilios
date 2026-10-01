@@ -55,7 +55,7 @@ export default function AdminLogin({ onLogin }) {
           fontSize: '1.8rem',
           margin: '0 0 4px',
         }}>
-          Giovanna Soares
+          Studio Bellart
         </h1>
         <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '30px' }}>
           Painel de Gerenciamento
@@ -121,7 +121,7 @@ export default function AdminLogin({ onLogin }) {
         </form>
 
         <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginTop: '20px' }}>
-          🔒 Acesso restrito — somente Giovanna
+          🔒 Acesso restrito — somente a administracao
         </p>
       </div>
     </div>

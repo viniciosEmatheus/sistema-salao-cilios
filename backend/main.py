@@ -19,7 +19,7 @@ from database import engine, SessionLocal
 # Cria as tabelas (novas tabelas apenas — não altera existentes)
 models.Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="API Salão de Cílios - Giovanna Soares")
+app = FastAPI(title="API Studio Bellart - Agendamento")
 
 # ─── CORS ─────────────────────────────────────────────────────────────────────
 # Em produção, defina no Render:
@@ -96,7 +96,7 @@ class LoginRequest(BaseModel):
 @app.post("/auth/login/")
 def login(data: LoginRequest):
     """
-    Autentica a Giovanna. Retorna JWT válido por JWT_EXPIRE_HOURS horas.
+    Autentica o administrador. Retorna JWT válido por JWT_EXPIRE_HOURS horas.
     Configure ADMIN_PASSWORD e JWT_SECRET nas variáveis de ambiente do Render.
     """
     if not auth.verificar_senha(data.password):
@@ -219,7 +219,7 @@ def create_booking(booking: BookingRequest, db: Session = Depends(get_db)):
             "description": f"Sinal - {service.name} (Horário #{appointment.id})",
             "payment_method_id": "pix",
             "payer": {
-                "email": "cliente@giovannasoares.com",
+                "email": "cliente@studiobellart.com",
                 "first_name": client.name,
             },
         }

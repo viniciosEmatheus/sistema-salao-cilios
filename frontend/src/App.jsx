@@ -10,7 +10,7 @@ function App() {
         {/* Rota da Cliente: raiz do site → agendamento */}
         <Route path="/" element={<ClientBooking />} />
 
-        {/* Rota da Giovanna: acesso via /#/gerencia */}
+        {/* Rota administrativa: acesso via /#/gerencia */}
         <Route path="/gerencia" element={<AdminDashboard />} />
 
         {/* Painel VIP: cliente consulta seus agendamentos via /#/minha-conta */}
