@@ -967,9 +967,6 @@ export default function AdminDashboard() {
     setToken(null);
   };
 
-  // Se não tiver token, mostra a tela de login
-  if (!token) return <AdminLogin onLogin={setToken} />;
-
   // ── Estado do painel ──────────────────────────────────────────────────────
   const [activeTab, setActiveTab]       = useState('agenda');
   const [appointments, setAppointments] = useState([]);
@@ -1001,7 +998,12 @@ export default function AdminDashboard() {
     }
   };
 
-  useEffect(() => { fetchAll(); }, []);
+  // Só busca os dados com sessão aberta; refaz quando o login acontece
+  useEffect(() => { if (token) fetchAll(); }, [token]);
+
+  // Sem token, mostra a tela de login. Fica depois de todos os hooks: um return
+  // antes deles muda a quantidade de hooks entre renders e derruba o painel no login.
+  if (!token) return <AdminLogin onLogin={setToken} />;
 
   if (loading) return (
     <div style={{ textAlign: 'center', marginTop: '80px' }}>
