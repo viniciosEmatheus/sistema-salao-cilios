@@ -229,13 +229,17 @@ export default function ClientBooking() {
 
         <div className="contact-badges">
           <div className="contact-item">
-            <span className="contact-icon">📍</span>
-            <p>São Paulo · SP<br/><small>Endereço enviado na confirmação</small></p>
+            <span className="contact-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 21s-7-6.2-7-11a7 7 0 1114 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+            </span>
+            <p><span className="contact-label">Localização</span><strong>São Paulo · SP</strong><small>Endereço enviado na confirmação</small></p>
           </div>
 
           <div className="contact-item">
-            <span className="contact-icon">📱</span>
-            <p>WhatsApp<br/>
+            <span className="contact-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.5 8.5 0 01-12.6 7.4L3 20.5l1.7-5.2A8.5 8.5 0 1121 11.5z"/><path d="M9 9.2c.3 2.2 2.6 4.5 5 5.1l1.3-1.3-1.9-1.1-.8.6c-.9-.4-1.6-1.1-2-2l.6-.8L10.1 7.8 9 9.2z"/></svg>
+            </span>
+            <p><span className="contact-label">WhatsApp</span>
               <a
                 href="https://wa.me/5511999999999?text=Oi%2C%20vi%20o%20cat%C3%A1logo%20no%20site%20e%20gostaria%20de%20tirar%20uma%20d%C3%BAvida..."
                 target="_blank"

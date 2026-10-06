@@ -454,3 +454,22 @@ button.catalog-card:focus-visible { outline: 3px solid var(--primary-color); out
 @media (max-width: 560px) { #agendar .container { padding: var(--sp-3) 20px; } }
 
 .lp-rodape { text-align: center; padding: var(--sp-4) var(--sp-3) var(--sp-5); color: #999; font-size: 0.875rem; border-top: 1px solid #f2e1e8; line-height: 1.8; }
+
+/* cartão de contato do topo: ícones de linha no lugar dos emojis, com rótulo, valor e divisória */
+.contact-badges {
+  flex-direction: row; flex-wrap: nowrap; justify-content: center; align-items: stretch;
+  gap: 0; max-width: 620px; padding: 0; overflow: hidden;
+}
+.contact-item { flex: 1 1 0; gap: 14px; padding: 20px 26px; }
+.contact-item + .contact-item { border-left: 1px solid #f5e3eb; }
+.contact-icon { width: 44px; height: 44px; padding: 0; flex: none; color: var(--primary-color); background: #fdf1f6; }
+.contact-icon svg { width: 22px; height: 22px; }
+.contact-item p { display: flex; flex-direction: column; gap: 2px; }
+.contact-label { font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase; color: #a8a0a5; font-weight: 700; }
+.contact-item p strong, .contact-link { font-size: 1.02rem; color: var(--text-main); font-weight: 700; }
+.contact-item small { font-size: 0.78rem; color: #a0a0a0; }
+@media (max-width: 560px) {
+  .contact-badges { flex-direction: column; max-width: 340px; }
+  .contact-item { padding: 16px 20px; }
+  .contact-item + .contact-item { border-left: 0; border-top: 1px solid #f5e3eb; }
+}
