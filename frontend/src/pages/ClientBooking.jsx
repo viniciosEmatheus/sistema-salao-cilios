@@ -1,6 +1,22 @@
 import { useState, useEffect, useRef } from 'react';
 import api from '../api/client';
 
+// Cards do catálogo: a foto, o texto de apoio e o modal de cada procedimento.
+const CATALOGO = [
+  { id: 'brasileiro', img: '/fotos/volume-brasileiro-fio-y.png', alt: 'Volume Brasileiro Studio Bellart',
+    fallback: 'https://images.unsplash.com/photo-1583241800698-e8ab01830a07?q=80&w=600', titulo: 'Volume Brasileiro', sub: 'Fio Y' },
+  { id: 'egipcio', img: '/fotos/volume-egipicio-fio-4D.png', alt: 'Volume Egípcio Studio Bellart',
+    fallback: 'https://images.unsplash.com/photo-1512496015851-a90838d54446?q=80&w=600', titulo: 'Volume Egípcio', sub: 'Fio 4D' },
+  { id: 'luxxo', img: '/fotos/volume-luxxo-fio-5D.png', alt: 'Volume Luxxo e Glamour Studio Bellart',
+    fallback: 'https://images.unsplash.com/photo-1620052579624-9adfa8ee9c51?q=80&w=600', titulo: 'Volume Luxxo / Glamour', sub: 'Fios 5D e 6D' },
+  { id: 'foxy', img: '/fotos/volume-foxxy-eyes.png', alt: 'Foxy Eyes Studio Bellart',
+    fallback: 'https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?q=80&w=600', titulo: 'Volume Foxy Eyes', sub: 'Curvatura M' },
+  { id: 'capping', img: '/fotos/volume-mega-brasileiro.png', alt: 'Técnica Capping Studio Bellart',
+    fallback: 'https://images.unsplash.com/photo-1515377905703-c4788e51af15?q=80&w=600', titulo: 'Técnica Capping', sub: 'Mega Retenção (sem manutenção)' },
+  { id: 'sobrancelhas', img: '/fotos/brow-lamination.png', alt: 'Sobrancelhas e Lamination Studio Bellart',
+    fallback: 'https://images.unsplash.com/photo-1616683693504-3ea7e9ad6fec?q=80&w=600', titulo: 'Sobrancelhas', sub: 'Lamination, Henna e Design' },
+];
+
 export default function ClientBooking() {
   const [services, setServices] = useState([]);
   const [formData, setFormData] = useState({
@@ -23,6 +39,9 @@ export default function ClientBooking() {
   const [activeModal, setActiveModal] = useState(null); // Controla qual modal está aberto
   
   const formRef = useRef(null);
+
+  // Rola até uma seção (a rota usa #, então não dá para usar âncoras comuns)
+  const irPara = (id) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
 
   useEffect(() => {
     api.get('/services/')
@@ -185,160 +204,167 @@ export default function ClientBooking() {
   }
 
   return (
-    <div>
-      {/* 1. APRESENTAÇÃO E CONTATO  */}
+    <div className="lp">
+      {/* Navegação rápida entre os tópicos da página */}
+      <nav className="lp-nav" aria-label="Seções da página">
+        <span className="lp-nav-marca">Studio Bellart</span>
+        <div className="lp-nav-links">
+          <button onClick={() => irPara('procedimentos')}>Procedimentos</button>
+          <button onClick={() => irPara('como-funciona')}>Como funciona</button>
+          <button className="lp-nav-cta" onClick={() => irPara('agendar')}>Agendar</button>
+        </div>
+      </nav>
+
+      {/* 1. APRESENTAÇÃO E CONTATO */}
       <header className="hero-section">
         <p className="hero-badge">✦ Studio de Beleza ✦</p>
         <h1 className="hero-title">Studio Bellart</h1>
         <div className="hero-divider"></div>
         <p className="hero-subtitle">Realçando a sua beleza natural com sofisticação e cuidado</p>
 
+        <div className="hero-cta">
+          <button className="btn-primary" onClick={() => irPara('agendar')}>Agendar meu horário</button>
+          <button className="btn-ghost" onClick={() => irPara('procedimentos')}>Ver procedimentos</button>
+        </div>
+
         <div className="contact-badges">
           <div className="contact-item">
             <span className="contact-icon">📍</span>
-            <p>São Paulo · SP<br/><small style={{color: '#999'}}>Endereço enviado na confirmação</small></p>
+            <p>São Paulo · SP<br/><small>Endereço enviado na confirmação</small></p>
           </div>
 
           <div className="contact-item">
             <span className="contact-icon">📱</span>
-            <p>WhatsApp:<br/>
+            <p>WhatsApp<br/>
               <a
                 href="https://wa.me/5511999999999?text=Oi%2C%20vi%20o%20cat%C3%A1logo%20no%20site%20e%20gostaria%20de%20tirar%20uma%20d%C3%BAvida..."
                 target="_blank"
                 rel="noreferrer"
-                style={{color: 'var(--text-main)', fontWeight: 'bold', textDecoration: 'none'}}
+                className="contact-link"
               >
                 (11) 99999-9999
               </a>
             </p>
           </div>
-
-          
         </div>
       </header>
 
-      {/* CATÁLOGO VISUAL DETALHADO - AGORA COM FOTOS REAIS (PNG) */}
-      <h2 className="title" style={{marginTop: '40px'}}>Nosso Catálogo</h2>
-      <p style={{textAlign: 'center', color: 'var(--text-muted)', marginBottom: '20px', fontSize: '0.95rem'}}>Clique no card para entender como o procedimento é feito</p>
-      
-      <section className="catalog-grid">
-        
-        <div className="catalog-card" onClick={() => setActiveModal('brasileiro')} style={{cursor: 'pointer'}}>
-          <img src="/fotos/volume-brasileiro-fio-y.png" alt="Volume Brasileiro Studio Bellart" onError={(e) => {e.target.src = "https://images.unsplash.com/photo-1583241800698-e8ab01830a07?q=80&w=600"}} />
-          <div className="catalog-card-body">
-            <h4>Volume Brasileiro</h4>
-            <p style={{fontSize: '0.9rem', color: 'var(--text-muted)'}}>Fio Y</p>
-          </div>
+      {/* 2. PROCEDIMENTOS */}
+      <section id="procedimentos" className="lp-secao">
+        <div className="lp-cab">
+          <p className="lp-eyebrow">Procedimentos</p>
+          <h2 className="lp-h2">Nosso catálogo</h2>
+          <p className="lp-sub">Clique em um procedimento para entender como ele é feito.</p>
         </div>
 
-        <div className="catalog-card" onClick={() => setActiveModal('egipcio')} style={{cursor: 'pointer'}}>
-          <img src="/fotos/volume-egipicio-fio-4D.png" alt="Volume Egípcio Studio Bellart" onError={(e) => {e.target.src = "https://images.unsplash.com/photo-1512496015851-a90838d54446?q=80&w=600"}} />
-          <div className="catalog-card-body">
-            <h4>Volume Egípcio</h4>
-            <p style={{fontSize: '0.9rem', color: 'var(--text-muted)'}}>Fio 4D</p>
-          </div>
+        <div className="catalog-grid">
+          {CATALOGO.map((c) => (
+            <button key={c.id} type="button" className="catalog-card" onClick={() => setActiveModal(c.id)}>
+              <img src={c.img} alt={c.alt} loading="lazy" onError={(e) => { e.target.src = c.fallback; }} />
+              <div className="catalog-card-body">
+                <h4>{c.titulo}</h4>
+                <p>{c.sub}</p>
+              </div>
+            </button>
+          ))}
         </div>
-
-        <div className="catalog-card" onClick={() => setActiveModal('luxxo')} style={{cursor: 'pointer'}}>
-          <img src="/fotos/volume-luxxo-fio-5D.png" alt="Volume Luxxo e Glamour Studio Bellart" onError={(e) => {e.target.src = "https://images.unsplash.com/photo-1620052579624-9adfa8ee9c51?q=80&w=600"}} />
-          <div className="catalog-card-body">
-            <h4>Volume Luxxo / Glamour</h4>
-            <p style={{fontSize: '0.9rem', color: 'var(--text-muted)'}}>Fios 5D e 6D</p>
-          </div>
-        </div>
-
-        <div className="catalog-card" onClick={() => setActiveModal('foxy')} style={{cursor: 'pointer'}}>
-          <img src="/fotos/volume-foxxy-eyes.png" alt="Foxy Eyes Studio Bellart" onError={(e) => {e.target.src = "https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?q=80&w=600"}} />
-          <div className="catalog-card-body">
-            <h4>Volume Foxy Eyes</h4>
-            <p style={{fontSize: '0.9rem', color: 'var(--text-muted)'}}>Curvatura M</p>
-          </div>
-        </div>
-
-        <div className="catalog-card" onClick={() => setActiveModal('capping')} style={{cursor: 'pointer'}}>
-          <img src="/fotos/volume-mega-brasileiro.png" alt="Técnica Capping Studio Bellart" onError={(e) => {e.target.src = "https://images.unsplash.com/photo-1515377905703-c4788e51af15?q=80&w=600"}} />
-          <div className="catalog-card-body">
-            <h4>Técnica Capping</h4>
-            <p style={{fontSize: '0.9rem', color: 'var(--text-muted)'}}>Mega Retenção (Sem manutenção)</p>
-          </div>
-        </div>
-
-        <div className="catalog-card" onClick={() => setActiveModal('sobrancelhas')} style={{cursor: 'pointer'}}>
-          <img src="/fotos/brow-lamination.png" alt="Sobrancelhas e Lamination Studio Bellart" onError={(e) => {e.target.src = "https://images.unsplash.com/photo-1616683693504-3ea7e9ad6fec?q=80&w=600"}} />
-          <div className="catalog-card-body">
-            <h4>Sobrancelhas</h4>
-            <p style={{fontSize: '0.9rem', color: 'var(--text-muted)'}}>Lamination, Henna e Design</p>
-          </div>
-        </div>
-
       </section>
 
-      {/* 3. REGRAS DE AGENDAMENTO E SINAL (VEIO DEPOIS DO CATÁLOGO) */}
-      <section className="info-box">
-        <h3>✨ Como funciona o nosso atendimento?</h3>
-        <ul>
-          <li><strong>Garantia de Horário (Sinal):</strong> Para assegurar sua vaga com organização, solicitamos um pagamento de sinal automático via Pix (R$ 30,00 para Cílios | R$ 15,00 para Sobrancelhas).</li>
-          <li><strong>Abatimento do Valor:</strong> O valor do sinal é integralmente descontado do preço do serviço no dia do atendimento.</li>
-          <li><strong>Tempo de Procedimento:</strong> Vá com tempo! Cílios demoram de 2h a 3h, e sobrancelhas de 40min a 1h50. Cada minuto faz diferença no resultado.</li>
-        </ul>
+      {/* 3. COMO FUNCIONA */}
+      <section id="como-funciona" className="lp-secao lp-secao-alt">
+        <div className="lp-cab">
+          <p className="lp-eyebrow">Como funciona</p>
+          <h2 className="lp-h2">Do agendamento ao atendimento</h2>
+          <p className="lp-sub">Três coisas para você saber antes de marcar.</p>
+        </div>
+
+        <ol className="passos">
+          <li className="passo">
+            <span className="passo-n">1</span>
+            <h3>Garanta seu horário com o sinal</h3>
+            <p>Para assegurar sua vaga com organização, pedimos um sinal automático via Pix: <strong>R$ 30,00</strong> para cílios e <strong>R$ 15,00</strong> para sobrancelhas.</p>
+          </li>
+          <li className="passo">
+            <span className="passo-n">2</span>
+            <h3>O sinal abate o valor</h3>
+            <p>O valor do sinal é integralmente descontado do preço do serviço no dia do atendimento.</p>
+          </li>
+          <li className="passo">
+            <span className="passo-n">3</span>
+            <h3>Vá com tempo</h3>
+            <p>Cílios levam de 2h a 3h e sobrancelhas de 40min a 1h50. Cada minuto faz diferença no resultado.</p>
+          </li>
+        </ol>
       </section>
 
-      {/* 4. FORMULÁRIO DE RESERVA */}
-      <div className="container" ref={formRef} style={{ marginBottom: '80px' }}>
-        <h2 className="title">Agende sua Sessão</h2>
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>Seu Nome Completo</label>
-            <input type="text" name="client_name" required onChange={handleChange} placeholder="Ex: Maria Silva" />
-          </div>
-          
-          <div className="form-group">
-            <label>Número do seu WhatsApp</label>
-            <input type="tel" name="client_phone" required onChange={handleChange} placeholder="(11) 99999-9999" />
-          </div>
-          
-          <div className="form-group">
-            <label>Escolha o Procedimento Comercial</label>
-            <select name="service_id" required onChange={handleChange} value={formData.service_id} style={{width:'100%', padding:'14px', borderRadius:'10px', border:'1px solid var(--border-color)'}}>
-              <option value="" disabled>Selecione o serviço desejado...</option>
-              {services.map(srv => (
-                <option key={srv.id} value={srv.id}>
-                  [{srv.category ? srv.category.toUpperCase() : 'SERVIÇO'}] {srv.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          
-          <div className="form-group">
-            <label>Escolha o Dia</label>
-            <input
-              type="date"
-              name="scheduled_date"
-              required
-              onChange={handleChange}
-              min={new Date().toISOString().split('T')[0]}
-              value={formData.scheduled_date}
-            />
-          </div>
+      {/* 4. AGENDAMENTO */}
+      <section id="agendar" className="lp-secao" ref={formRef}>
+        <div className="lp-cab">
+          <p className="lp-eyebrow">Agendamento</p>
+          <h2 className="lp-h2">Agende sua sessão</h2>
+          <p className="lp-sub">Leva menos de um minuto. O Pix do sinal é gerado na hora.</p>
+        </div>
 
-          <div className="form-group">
-            <label>Escolha o Horário</label>
-            <select name="scheduled_time" required onChange={handleChange} value={formData.scheduled_time}
-              style={{width:'100%', padding:'14px', borderRadius:'10px', border:'1px solid var(--border-color)'}}>
-              <option value="" disabled>Selecione o horário...</option>
-              {timeSlots.map(t => (
-                <option key={t} value={t}>
-                  {t.replace(':', 'h')}
-                </option>
-              ))}
-            </select>
-          </div>
-          
-          <button type="submit" className="btn-primary" disabled={loading}>
-            {loading ? 'Gerando Pix de Segurança...' : 'Confirmar Horário e Ir para o Pagamento'}
-          </button>
-        </form>
-      </div>
+        <div className="container">
+          <form onSubmit={handleSubmit}>
+              <div className="form-group">
+                <label>Seu Nome Completo</label>
+                <input type="text" name="client_name" required onChange={handleChange} placeholder="Ex: Maria Silva" />
+              </div>
+              
+              <div className="form-group">
+                <label>Número do seu WhatsApp</label>
+                <input type="tel" name="client_phone" required onChange={handleChange} placeholder="(11) 99999-9999" />
+              </div>
+              
+              <div className="form-group">
+                <label>Escolha o Procedimento Comercial</label>
+                <select name="service_id" required onChange={handleChange} value={formData.service_id} style={{width:'100%', padding:'14px', borderRadius:'10px', border:'1px solid var(--border-color)'}}>
+                  <option value="" disabled>Selecione o serviço desejado...</option>
+                  {services.map(srv => (
+                    <option key={srv.id} value={srv.id}>
+                      [{srv.category ? srv.category.toUpperCase() : 'SERVIÇO'}] {srv.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="form-group">
+                <label>Escolha o Dia</label>
+                <input
+                  type="date"
+                  name="scheduled_date"
+                  required
+                  onChange={handleChange}
+                  min={new Date().toISOString().split('T')[0]}
+                  value={formData.scheduled_date}
+                />
+              </div>
+    
+              <div className="form-group">
+                <label>Escolha o Horário</label>
+                <select name="scheduled_time" required onChange={handleChange} value={formData.scheduled_time}
+                  style={{width:'100%', padding:'14px', borderRadius:'10px', border:'1px solid var(--border-color)'}}>
+                  <option value="" disabled>Selecione o horário...</option>
+                  {timeSlots.map(t => (
+                    <option key={t} value={t}>
+                      {t.replace(':', 'h')}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <button type="submit" className="btn-primary" disabled={loading}>
+                {loading ? 'Gerando Pix de Segurança...' : 'Confirmar Horário e Ir para o Pagamento'}
+              </button>
+            </form>
+        </div>
+      </section>
+
+      <footer className="lp-rodape">
+        <p>Studio Bellart · São Paulo, SP</p>
+        <p>Demonstração do sistema de agendamento da Ordem Certa</p>
+      </footer>
 
       {/* --- RENDERIZAÇÃO DO MODAL DINÂMICO --- */}
       {activeModal && (
